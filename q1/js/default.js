@@ -38,6 +38,10 @@ class Chess {
 		this.rank = rank;
 	}
 }
+function fight(chess1, chess2) {
+	if(chess1.rank==="grenade")
+		return [false, false];
+}
 
 
 //*****************************
