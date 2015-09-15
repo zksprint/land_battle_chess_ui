@@ -1,0 +1,9 @@
+#Board {
+	background:url("../img/board.jpg");
+	background-repeat: no-repeat;
+	margin: 30px;
+}
+#ChessList {
+	background:url("../img/Luzhanqi_chinese_army_chess_board.jpg");
+	margin: 10px;
+}
