@@ -1,8 +1,37 @@
 "use strict";
 
-//*****************************
+//==============================================================================
+// API
+//==============================================================================
+// 1. Create board
+//
+// Constructor will create the chess and locations.
+// Main player will be on the bottom while opponent on the top.
+// board = new Board(mainPlayer);
+//
+// 2. Prepare stage
+// Get chess that are not placed on board
+// board.GetChessList(player);
+//
+// Default chess placement
+// board.DefaultPlace(set);
+//
+// Check if a chess is able to place on a location
+// board.PlaceChess(chess, location);
+// board.Move(chess);
+//
+// 4. Competiton
+// board.GetMovableLocations
+
+class Player {
+	constructor(username) {
+		this.username = username
+	}
+}
+
+//==============================================================================
 // Chess
-//*****************************
+//==============================================================================
 var Rank_zhHK = [
 	"司令",//0
 	"軍長",//1
@@ -33,15 +62,23 @@ var Rank_enUS = [
 	"Flag"
 ];
 
+// Enum type for Chess status
+var ChessStatus = {"OnBoard":1, "Dead":2, "NotPlaced":3}
+Object.freeze(ChessStatus);		//Enum syntax for Javascript
+
+// Chess object representing a chess instance
 class Chess {
-	constructor(rank, owner) {
+	constructor(rank, player) {
 		this.rank = rank;
-		this.owner = owner;
+		this.player = player;
+		this.chessStatus = ChessStatus.NotPlaced;
+		this.display = true;
 	}
 }
 
-//return false => die, true => alive
-function compare_rank(chess1, chess2) {
+// Compare two chess, returns [bool, bool]
+// false => die, true => alive
+function CompareRank(chess1, chess2) {
 	if(chess1.rank==10 || chess2.rank==10)	//Grenade => both removed
 		return [false, false];
 	else if(chess1.rank==9 && chess2.rank==8)	//Engineer clear landmine
@@ -57,40 +94,13 @@ function compare_rank(chess1, chess2) {
 	else if(chess1.rank<chess2.rank)	//1<2
 		return [false, true];
 	else
-		console.log("Error in compare_rank()");
+		console.log("Error in CompareRank()");
 }
 
-function destroy_chess(chess) {
-	if(chess.rank==11)
-		GameOver(chess);	//Flag being captured => GameOver
-	if(chess.rank==0)
-		RevealFlag(chess);	//RevealFlag when Field Marshal is destroyed
-}
 
-function Move(chess, newLocation) {
-	//if target location have enemy chess
-	if(newLocation.get_chess()) {
-		chess1 = chess;
-		chess2 = newLocation.get_chess();
-		var ret = compare_rank(chess1, chess2);
-		if(ret[0]==false)
-			destroy_chess(chess1);
-		if(ret[1]==false)
-			destroy_chess(chess2);
-		if(ret[0]==true && ret[1]==false)
-			newLocation.set_chess(chess1);
-		if(ret[0]==false && ret[1]==true)
-			newLocation.set_chess(chess2);
-	} else {
-		newLocation.set_chess(chess);
-	}
-}
-	
-
-
-//*****************************
+//==============================================================================
 // Board
-//*****************************
+//==============================================================================
 var LocationType_zhHK = {
 	soldier_station: "兵營",
 	camp: "行營",
@@ -103,6 +113,7 @@ var LocationType_enUS = {
 	headquarters: "Headquarters"
 };
 
+// Represent a movable location on the board
 class Location {
 	constructor(x, y, locationType, isOnRail) {
 		this.edges = [];
@@ -111,35 +122,139 @@ class Location {
 		this.locationType = locationType;
 		this.isOnRail = isOnRail;
 	}
-	add_edge(linked_location) {
-	//	if(this.edges.indexOf(linked_location)<0)
+	// edge is the connection between the locations
+	addEdge(linked_location) {
+		if(this.edges.indexOf(linked_location)<0)
 			this.edges.push(linked_location);
 	}
-	set_chess(chess) {
+	setChess(chess) {
 		this.chess = chess;
 	}
-	get_chess() {
+	getChess() {
 		return this.chess;
 	}
 }
 
-class Player {
-	constructor(username) {
-		this.username = username
-	}
-}
-
+// Overall controller class, should be singleton
 class Board {
-	add_edge(location1, location2) {
-		location1.add_edge(location2);
-		location2.add_edge(location1);
+	// add edge from 1 to 2 and from 2 to 1
+	addEdge(location1, location2) {
+		location1.addEdge(location2);
+		location2.addEdge(location1);
 	}
 
-	get_location(x, y) {
-		return this.locations[x+y*5];
+	// After Field Marshal died, the flag will be reveal 
+	function RevealFlag(player) {
+		this.GetChessList(player).forEach( (i) => {
+			if(i.rank == 11)
+				i.display = true;
+		});
 	}
 
-	constructor(){
+	// Set a chess status to dead
+	function destroy_chess(chess) {
+		//Flag being captured => GameOver
+		if(chess.rank==11)
+			GameOver(chess);	
+		//RevealFlag when Field Marshal is destroyed
+		if(chess.rank==0)
+			RevealFlag(chess.player);
+	}
+
+	// Get the location of a chess
+	// return Option<location>
+	GetChessLocation(chess) {
+		var ret;
+		if(chess) {
+			this.locations.forEach( (i) => {
+				if (i.getChess() == chess)
+					ret = i;
+			});
+		}
+		return ret;
+	}
+
+	// Return a list of chess for that player.
+	// All the chess belongs to the player will be returned,
+	// no matter died or alive.
+	GetChessList(player) {
+		var ret = [];
+		this.chess.forEach((i) => {
+			if(player && player == i.player)
+				ret.push(i);
+			else
+				ret.push(i);
+		});
+		return ret;
+	}
+
+	getLocationInstance(loc) {
+		var ret;
+		this.locations.forEach( (i) => {
+			if(i.x == loc.x && i.y == loc.y)
+				ret=i;
+		}
+		return ret;
+	}
+	GetMovableLocation(ori_location) {
+		var queue = [];
+		var visited = [];
+		var movable = [];
+		visited.push(ori_location);
+		ori_location.edges.forEach((i)=>queue.push(i));
+		while(queue.length>0) {
+			var u = queue.shift();
+			var ret = is_movable(ori_location, u);
+			visited.push(u);
+			if(ret[0]==true)
+				movable.push(u);
+			if(ret[1]==true)
+				u.edges.forEach( (i) => {
+					if(i.isOnRail==true)
+					{
+						var visited_bool = false;
+						visited.forEach( (j) => {
+							if(j.x == i.x && j.y == i.y)
+								visited_bool=true;
+						});
+						if(visited_bool==false && queue.indexOf(i)<0)	//visited -> skip
+							queue.push(i);
+					}
+				});
+		}
+		return movable;
+	}
+
+
+
+	Move(chess, newLocation) {
+		var ori_location = this.GetChessLocation(chess);
+		if (ori_location && get_movable_pos(ori_location).indexOf(newLocation)<0)
+			//verify the movable positions for the chess on ori_location
+			//if not movable, return
+			return;		
+		if (ori_location)
+			ori_location.setChess(null);	//if chess is already on the board
+		//if target location have enemy chess
+		if(newLocation.getChess()) {
+			chess1 = chess;
+			chess2 = newLocation.getChess();
+			var ret = CompareRank(chess1, chess2);
+			if(ret[0]==false)
+				destroy_chess(chess1);
+			if(ret[1]==false)
+				destroy_chess(chess2);
+			if(ret[0]==true && ret[1]==false)
+				newLocation.setChess(chess1);
+			if(ret[0]==false && ret[1]==true)
+				newLocation.setChess(chess2);
+		} else {
+			newLocation.setChess(chess);
+		}
+	}
+
+
+	constructor(mainPlayer){
 		//Create locations
 		this.locations = [];
 		//row 1
@@ -220,8 +335,8 @@ class Board {
 		this.chess = []
 		var chess_array = [0,1,2,2,3,3,4,4,5,5,6,6,6,7,7,7,8,8,8,9,9,9,10,10,11];
 		chess_array.forEach( (i) => {
-			this.chess.push(new Chess(i.rank, 0));
-			this.chess.push(new Chess(i.rank, 1));
+			this.chess.push(new Chess(i, 0));
+			this.chess.push(new Chess(i, 1));
 		});
 
 		//Create edges
@@ -229,29 +344,29 @@ class Board {
 		var x, y;
 		for(x=0; x<=3; x++) {	//rows
 			for(y=0; y<=11; y++) {	//cols
-				this.add_edge(this.get_location(x,y),this.get_location(x+1,y));
+				this.addEdge(this.get_location(x,y),this.get_location(x+1,y));
 			}
 		}
 		//All vertical edge
 		for(x=0; x<=4; x++) {	//rows
 			for(y=0; y<=4; y++) {	//cols
-				this.add_edge(this.get_location(x,y),this.get_location(x,y+1));
+				this.addEdge(this.get_location(x,y),this.get_location(x,y+1));
 			}
 		}
 		for(x=0; x<=4; x++) {	//rows
 			for(y=6; y<=10; y++) {	//cols
-				this.add_edge(this.get_location(x,y),this.get_location(x,y+1));
+				this.addEdge(this.get_location(x,y),this.get_location(x,y+1));
 			}
 		}
-		this.add_edge(this.get_location(0,5),this.get_location(0,6));
-		this.add_edge(this.get_location(2,5),this.get_location(2,6));
-		this.add_edge(this.get_location(4,5),this.get_location(4,6));
+		this.addEdge(this.get_location(0,5),this.get_location(0,6));
+		this.addEdge(this.get_location(2,5),this.get_location(2,6));
+		this.addEdge(this.get_location(4,5),this.get_location(4,6));
 		//All camp edge
 		var camp_edge = function(camp) {
-			this.add_edge(camp,this.get_location(camp.x-1,camp.y-1));
-			this.add_edge(camp,this.get_location(camp.x-1,camp.y+1));
-			this.add_edge(camp,this.get_location(camp.x+1,camp.y-1));
-			this.add_edge(camp,this.get_location(camp.x+1,camp.y+1));
+			this.addEdge(camp,this.get_location(camp.x-1,camp.y-1));
+			this.addEdge(camp,this.get_location(camp.x-1,camp.y+1));
+			this.addEdge(camp,this.get_location(camp.x+1,camp.y-1));
+			this.addEdge(camp,this.get_location(camp.x+1,camp.y+1));
 		}
 		this.locations.forEach( (i) => {	//foreach camp
 			if (i.locationType === "camp")
@@ -262,10 +377,10 @@ class Board {
 
 //[movable, continue search]
 function is_movable(ori_location, target_location) {
-	if(target_location.get_chess()) {
-		if(target_location.get_chess().owner === ori_location.get_chess().owner)
+	if(target_location.getChess()) {
+		if(target_location.getChess().player === ori_location.getChess().player)
 			return [false, false];	//target pos contains our chess
-		if(target_location.get_chess().owner !== ori_location.get_chess().owner)
+		if(target_location.getChess().player !== ori_location.getChess().player)
 		{
 			if(target_location.locationType === "camp")
 				return [false,false];	//target enemy is in camp
@@ -276,10 +391,11 @@ function is_movable(ori_location, target_location) {
 		if(target_location.isOnRail == false)
 			return [true, false];
 		else {		//on rail
-			if(ori_location.get_chess().rank!==8)
+			if(ori_location.getChess() && ori_location.getChess().rank != 8)
 			{
 				//only allow straight line movement on rail
-				if(ori_location.x == target_location.x || ori_location.y == target_location.y)
+				if((ori_location.edges.indexOf(target_location)>-1) ||
+					(ori_location.x == target_location.x || ori_location.y == target_location.y))
 					return [true, true];
 				else
 					return [false, false];
@@ -291,79 +407,6 @@ function is_movable(ori_location, target_location) {
 }
 
 
-function get_movable_pos(ori_location) {
-	var queue = [];
-	var visited = [];
-	var movable = [];
-	visited.push(ori_location);
-	ori_location.edges.forEach((i)=>queue.push(i));
-	while(queue.length>0) {
-		var u = queue.shift();
-		var ret = is_movable(ori_location, u);
-		visited.push(u);
-		if(ret[0]==true)
-			movable.push(u);
-		if(ret[1]==true)
-			u.edges.forEach( (i) => {
-				if(i.isOnRail==true)
-				{
-					var visited_bool = false;
-					visited.forEach( (j) => {
-						if(j.x == i.x && j.y == i.y)
-							visited_bool=true;
-					});
-					if(visited_bool==false)	//visited -> skip
-						queue.push(i);
-				}
-			});
-	}
-	return movable;
-}
-
 
 var board = new Board();
-board.get_location(3,3).set_chess(new Chess(10));
-get_movable_pos(board.get_location(3,3)).forEach( (i) => console.log(i.x,i.y));
-
-//========================================
-// API
-//========================================
-
-// Init a board
-// Board() -> Board;
-
-// Create a chess
-// new Chess(rank: int, player: Player) -> Chess;
-
-// Assign chess to a location
-// board.get_location(x: int, y: int).set_chess(chess: Chess);
-
-// Get movable location for a chess on the location
-// get_movable_pos(location: Location) -> Option<Location[]>;
-
-// Get placeable location for a chess
-// Default Player_1 is user at bottom, Player_2 is AI on top
-// get_placeable_location(player: Player, chess: Chess) -> Option<Location[]>
-
-// Game over
-// player: The winner
-// GameOver(player: Player);
-
-// Reveal the Flags when Field Marshal is destroyed
-// RevealFlag(player: Player);
-
-// Move a chess to a new location
-// If the location have other chess, the winner will assign to the location
-// Move(chess: Chess, location: Location);
-
-// Destroy Chess
-// destroy_chess(chess);
-
-
-//========================================
-// AI feature
-//========================================
-
-// Init the AI player's chess
-// init_ai_chess();
 
