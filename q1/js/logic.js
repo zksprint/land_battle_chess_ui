@@ -378,7 +378,8 @@ class Board {
 }
 
 //[movable, continue search]
-function is_movable(ori_location, targetLocationInstance) {
+
+function __is_movable_check_chess(ori_location, targetLocationInstance, is_continue) {
 	if(targetLocationInstance.getChess()) {
 		if(targetLocationInstance.getChess().player === ori_location.getChess().player)
 			return [false, false];	//target pos contains our chess
@@ -390,24 +391,75 @@ function is_movable(ori_location, targetLocationInstance) {
 				return [true, false];
 			}
 		}
-	} else {
-		if(targetLocationInstance.isOnRail == false)
+	}
+	return [true,is_continue];
+}
+
+
+function is_movable(ori_location, targetLocationInstance) {
+	var enemyChess = -1;	//no ches
+	if(targetLocationInstance.getChess()
+			&& targetLocationInstance.getChess().player!==ori_location.getChess().player)
+		enemyChess = 1;	//enemy chess
+	if(targetLocationInstance.getChess()
+			&& targetLocationInstance.getChess().player===ori_location.getChess().player)
+		enemyChess = 0;	//our chess
+	console.log(enemyChess);
+	//for direct linkage
+	if(ori_location.isOnRail == false) {
+		if(ori_location.edges.indexOf(targetLocationInstance)>-1) {
+			if(enemyChess==0)
+				return [false,false];
+			if(enemyChess==1 && targetLocationInstance.locationType === "camp")
+				return [false,false];
 			return [true, false];
-		else {		//on rail
-			if(ori_location.getChess() && ori_location.getChess().rank != 8)
-			{
-				//only allow straight line movement on rail
-				if((ori_location.edges.indexOf(targetLocationInstance)>-1) ||
-					(ori_location.x == targetLocationInstance.x || ori_location.y == targetLocationInstance.y))
-					return [true, true];
-				else
-					return [false, false];
-			} else {
-				return [true, true];
-			}
 		}
 	}
+	//for rail case
+	var engineer = false;
+	if(ori_location.getChess() && ori_location.getChess().rank == 8)
+		engineer = true;
+	if(ori_location.edges.indexOf(targetLocationInstance)>-1) {
+		if(enemyChess==0)
+			return [false,false];
+		if(enemyChess==1 && targetLocationInstance.locationType === "camp")
+			return [false,false];
+		if(enemyChess==1 && targetLocationInstance.locationType !== "camp")
+			return [true,false];
+		if(targetLocationInstance.isOnRail==false) {
+			return [true, false];
+		} else {
+			return [true, true];
+		}
+	} else {
+		if(enemyChess==0)
+			return [false,false];
+		if(enemyChess==1 && targetLocationInstance.locationType === "camp")
+			return [false,false];
+		if(targetLocationInstance.isOnRail==false)
+			return [false,false];
+		if(engineer) {
+			if(enemyChess==1 && targetLocationInstance.locationType !== "camp")
+				return [true,false];
+			return [true, true];
+		} else {
+			if(enemyChess==1 && targetLocationInstance.locationType !== "camp" &&
+				(ori_location.x == targetLocationInstance.x || ori_location.y == targetLocationInstance.y))
+				return [true,false];
+			if(targetLocationInstance.isOnRail==true && 
+				(ori_location.x == targetLocationInstance.x || ori_location.y == targetLocationInstance.y))
+				return [true,true];
+			else
+				return [false,false];
+		}
+	}
+	return [false,false];
 }
+
+
+
+//[movable, continue search]
+
 
 
 
