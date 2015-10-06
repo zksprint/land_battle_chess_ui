@@ -144,7 +144,7 @@ class Board {
 	}
 
 	// After Field Marshal died, the flag will be reveal 
-	function RevealFlag(player) {
+	RevealFlag(player) {
 		this.GetChessList(player).forEach( (i) => {
 			if(i.rank == 11)
 				i.display = true;
@@ -152,7 +152,7 @@ class Board {
 	}
 
 	// Set a chess status to dead
-	function destroy_chess(chess) {
+	destroy_chess(chess) {
 		//Flag being captured => GameOver
 		if(chess.rank==11)
 			GameOver(chess);	
@@ -180,22 +180,23 @@ class Board {
 	GetChessList(player) {
 		var ret = [];
 		this.chess.forEach((i) => {
-			if(player && player == i.player)
-				ret.push(i);
-			else
+			if(player == i.player)
 				ret.push(i);
 		});
 		return ret;
 	}
 
-	getLocationInstance(loc) {
+	// Find the location instance with same (x,y)
+	getLocationInstance(x,y) {
 		var ret;
 		this.locations.forEach( (i) => {
-			if(i.x == loc.x && i.y == loc.y)
+			if(i.x == x && i.y == y)
 				ret=i;
-		}
+		});
 		return ret;
 	}
+
+	// List the movable location for a chess on a particular location
 	GetMovableLocation(ori_location) {
 		var queue = [];
 		var visited = [];
@@ -217,7 +218,8 @@ class Board {
 							if(j.x == i.x && j.y == i.y)
 								visited_bool=true;
 						});
-						if(visited_bool==false && queue.indexOf(i)<0)	//visited -> skip
+						// if visited -> skip
+						if(visited_bool==false && queue.indexOf(i)<0)
 							queue.push(i);
 					}
 				});
@@ -229,7 +231,7 @@ class Board {
 
 	Move(chess, newLocation) {
 		var ori_location = this.GetChessLocation(chess);
-		if (ori_location && get_movable_pos(ori_location).indexOf(newLocation)<0)
+		if (ori_location && this.GetMovableLocation(ori_location).indexOf(newLocation)<0)
 			//verify the movable positions for the chess on ori_location
 			//if not movable, return
 			return;		
@@ -344,29 +346,29 @@ class Board {
 		var x, y;
 		for(x=0; x<=3; x++) {	//rows
 			for(y=0; y<=11; y++) {	//cols
-				this.addEdge(this.get_location(x,y),this.get_location(x+1,y));
+				this.addEdge(this.getLocationInstance(x,y),this.getLocationInstance(x+1,y));
 			}
 		}
 		//All vertical edge
 		for(x=0; x<=4; x++) {	//rows
 			for(y=0; y<=4; y++) {	//cols
-				this.addEdge(this.get_location(x,y),this.get_location(x,y+1));
+				this.addEdge(this.getLocationInstance(x,y),this.getLocationInstance(x,y+1));
 			}
 		}
 		for(x=0; x<=4; x++) {	//rows
 			for(y=6; y<=10; y++) {	//cols
-				this.addEdge(this.get_location(x,y),this.get_location(x,y+1));
+				this.addEdge(this.getLocationInstance(x,y),this.getLocationInstance(x,y+1));
 			}
 		}
-		this.addEdge(this.get_location(0,5),this.get_location(0,6));
-		this.addEdge(this.get_location(2,5),this.get_location(2,6));
-		this.addEdge(this.get_location(4,5),this.get_location(4,6));
+		this.addEdge(this.getLocationInstance(0,5),this.getLocationInstance(0,6));
+		this.addEdge(this.getLocationInstance(2,5),this.getLocationInstance(2,6));
+		this.addEdge(this.getLocationInstance(4,5),this.getLocationInstance(4,6));
 		//All camp edge
 		var camp_edge = function(camp) {
-			this.addEdge(camp,this.get_location(camp.x-1,camp.y-1));
-			this.addEdge(camp,this.get_location(camp.x-1,camp.y+1));
-			this.addEdge(camp,this.get_location(camp.x+1,camp.y-1));
-			this.addEdge(camp,this.get_location(camp.x+1,camp.y+1));
+			this.addEdge(camp,this.getLocationInstance(camp.x-1,camp.y-1));
+			this.addEdge(camp,this.getLocationInstance(camp.x-1,camp.y+1));
+			this.addEdge(camp,this.getLocationInstance(camp.x+1,camp.y-1));
+			this.addEdge(camp,this.getLocationInstance(camp.x+1,camp.y+1));
 		}
 		this.locations.forEach( (i) => {	//foreach camp
 			if (i.locationType === "camp")
@@ -376,26 +378,27 @@ class Board {
 }
 
 //[movable, continue search]
-function is_movable(ori_location, target_location) {
-	if(target_location.getChess()) {
-		if(target_location.getChess().player === ori_location.getChess().player)
+function is_movable(ori_location, targetLocationInstance) {
+	if(targetLocationInstance.getChess()) {
+		if(targetLocationInstance.getChess().player === ori_location.getChess().player)
 			return [false, false];	//target pos contains our chess
-		if(target_location.getChess().player !== ori_location.getChess().player)
+		if(targetLocationInstance.getChess().player !== ori_location.getChess().player)
 		{
-			if(target_location.locationType === "camp")
+			if(targetLocationInstance.locationType === "camp")
 				return [false,false];	//target enemy is in camp
-			else
+			else {
 				return [true, false];
+			}
 		}
 	} else {
-		if(target_location.isOnRail == false)
+		if(targetLocationInstance.isOnRail == false)
 			return [true, false];
 		else {		//on rail
 			if(ori_location.getChess() && ori_location.getChess().rank != 8)
 			{
 				//only allow straight line movement on rail
-				if((ori_location.edges.indexOf(target_location)>-1) ||
-					(ori_location.x == target_location.x || ori_location.y == target_location.y))
+				if((ori_location.edges.indexOf(targetLocationInstance)>-1) ||
+					(ori_location.x == targetLocationInstance.x || ori_location.y == targetLocationInstance.y))
 					return [true, true];
 				else
 					return [false, false];

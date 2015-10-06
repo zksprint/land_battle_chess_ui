@@ -2,8 +2,8 @@ draw_array = [];
 draw_pos = [];
 CHESS_WIDTH = 50;
 CHESS_HEIGHT = 30;
-player_color = { 1:"blue", 2:"red"}
-current_player = 1;
+player_color = { 0:"blue", 1:"red"}
+current_player = 0;
 //Prepare stage
 //Mouse related
 mouse_down = false;
@@ -63,9 +63,9 @@ function canvas_down(e) {
 	selected_chess = coords;
 	selected_chess_movable=[];
 	logic_coords = get_draw_pos_index(coords);
-	if(selected_chess && board.get_location(logic_coords.x, logic_coords.y).get_chess()) {
+	if(selected_chess && board.getLocationInstance(logic_coords.x, logic_coords.y).getChess()) {
 		pos = get_draw_pos_index(coords);
-		movable_location = get_movable_pos(board.get_location(pos.x, pos.y));
+		movable_location = board.GetMovableLocation(board.getLocationInstance(pos.x, pos.y));
 		movable_location.forEach((i) => selected_chess_movable.push(get_draw_pos(i.x, i.y)));
 	}
 }
@@ -76,10 +76,12 @@ function canvas_up(e) {
 	if(rect_obj && selected_chess) {
 		ori_location = get_draw_pos_index(selected_chess);
 		target_location = get_draw_pos_index(rect_obj);
-		ori_location_logic = board.get_location(ori_location.x, ori_location.y);
-		chess = ori_location_logic.get_chess();
-		target_location_logic = board.get_location(target_location.x, target_location.y);
-		board.Move(chess, target_location_logic);
+		targetLocationInstance = get_draw_pos_index(rect_obj);
+		ori_location_logic = board.getLocationInstance(ori_location.x, ori_location.y);
+		chess = ori_location_logic.getChess();
+		console.log(target_location.x, target_location.y);
+		targetLocationInstance_logic = board.getLocationInstance(target_location.x, target_location.y);
+		board.Move(chess, targetLocationInstance_logic);
 		//Move command: for selected_chess, move to get_rect_obj(mouse_current_pos)
 		update_draw_array();
 		selected_chess=null
@@ -97,17 +99,88 @@ function canvas_mousemove(e) {
 	
 var canvas;
 var ctx;
+function default_position(set) {
+	if(set == 1) {
+		p1 = board.GetChessList(0);
+		//1
+		board.getLocationInstance(0,6).setChess(p1[0]);
+		board.getLocationInstance(1,6).setChess(p1[1]);
+		board.getLocationInstance(2,6).setChess(p1[2]);
+		board.getLocationInstance(3,6).setChess(p1[3]);
+		board.getLocationInstance(4,6).setChess(p1[4]);
+		//2
+		board.getLocationInstance(0,7).setChess(p1[5]);
+		board.getLocationInstance(2,7).setChess(p1[6]);
+		board.getLocationInstance(4,7).setChess(p1[7]);
+		//3
+		board.getLocationInstance(0,8).setChess(p1[8]);
+		board.getLocationInstance(1,8).setChess(p1[9]);
+		board.getLocationInstance(3,8).setChess(p1[10]);
+		board.getLocationInstance(4,8).setChess(p1[11]);
+		//4
+		board.getLocationInstance(0,9).setChess(p1[12]);
+		board.getLocationInstance(2,9).setChess(p1[13]);
+		board.getLocationInstance(4,9).setChess(p1[14]);
+		//5
+		board.getLocationInstance(0,10).setChess(p1[15]);
+		board.getLocationInstance(1,10).setChess(p1[16]);
+		board.getLocationInstance(2,10).setChess(p1[17]);
+		board.getLocationInstance(3,10).setChess(p1[18]);
+		board.getLocationInstance(4,10).setChess(p1[19]);
+		//6
+		board.getLocationInstance(0,11).setChess(p1[20]);
+		board.getLocationInstance(1,11).setChess(p1[21]);
+		board.getLocationInstance(2,11).setChess(p1[22]);
+		board.getLocationInstance(3,11).setChess(p1[24]);
+		board.getLocationInstance(4,11).setChess(p1[23]);
+
+		p1 = board.GetChessList(1);
+		board.getLocationInstance(0,5).setChess(p1[0]);
+		board.getLocationInstance(1,5).setChess(p1[1]);
+		board.getLocationInstance(2,5).setChess(p1[2]);
+		board.getLocationInstance(3,5).setChess(p1[3]);
+		board.getLocationInstance(4,5).setChess(p1[4]);
+		//2
+		board.getLocationInstance(0,4).setChess(p1[5]);
+		board.getLocationInstance(2,4).setChess(p1[6]);
+		board.getLocationInstance(4,4).setChess(p1[7]);
+		//3
+		board.getLocationInstance(0,3).setChess(p1[8]);
+		board.getLocationInstance(1,3).setChess(p1[9]);
+		board.getLocationInstance(3,3).setChess(p1[10]);
+		board.getLocationInstance(4,3).setChess(p1[11]);
+		//4
+		board.getLocationInstance(0,2).setChess(p1[12]);
+		board.getLocationInstance(2,2).setChess(p1[13]);
+		board.getLocationInstance(4,2).setChess(p1[14]);
+		//5
+		board.getLocationInstance(0,1).setChess(p1[15]);
+		board.getLocationInstance(1,1).setChess(p1[16]);
+		board.getLocationInstance(2,1).setChess(p1[17]);
+		board.getLocationInstance(3,1).setChess(p1[18]);
+		board.getLocationInstance(4,1).setChess(p1[19]);
+		//6
+		board.getLocationInstance(0,0).setChess(p1[20]);
+		board.getLocationInstance(1,0).setChess(p1[21]);
+		board.getLocationInstance(2,0).setChess(p1[22]);
+		board.getLocationInstance(3,0).setChess(p1[24]);
+		board.getLocationInstance(4,0).setChess(p1[23]);
+
+
+	}
+}
+
 function all_init() {
 	canvas = document.getElementById("Board");
 	ctx = canvas.getContext("2d");
 	resetChess();
 	init();
+	default_position(1);
 	canvas.addEventListener('mousedown', canvas_down);
 	canvas.addEventListener('mouseup', canvas_up);
 	canvas.addEventListener('mouseleave', canvas_up);
 	canvas.addEventListener('mousemove', canvas_mousemove);
 	setInterval( () => { draw(ctx);});
-	board.get_location(3,3).set_chess(board.chess[1]);
 	update_draw_array();
 	draw(ctx);
 }
@@ -122,7 +195,7 @@ function is_chess_visible(chess) {
 function update_draw_array() {
 	resetChess();
 	board.locations.forEach( (i) => {
-		chess = i.get_chess();
+		chess = i.getChess();
 		if(chess && chess!=null) {
 			var visible = is_chess_visible(chess);
 			drawChess(Rank_zhHK[chess.rank], i.x, i.y, player_color[chess.player], visible);
@@ -140,65 +213,15 @@ function drawChess(txt, x, y, color, txt_visible) {
 	draw_array.push({txt:txt, x:x, y:y, color:color, txt_visible: txt_visible});
 }
 
+
+//==============================================================================
+// Render function
+//==============================================================================
 dash_count=0;
 loop_count=0;
-//==================================
-// Render
-//==================================
-
-function render_chess(ctx, text, bg_color, border_color, x, y) {
-	ctx.save();
-	//box
-	ctx.lineWidth = "3";
-	ctx.strokeStyle = border_color;
-	ctx.fillStyle = bg_color;
-	ctx.rect(x, y, CHESS_WIDTH, CHESS_HEIGHT);
-	ctx.stroke();
-	ctx.fill();
-	ctx.restore();
-	ctx.save();
-	//text
-	ctx.font = '20px arial';
-    ctx.fillStyle = '#000';
-	ctx.textAlign="left";
-	ctx.fillText(text, x+8, y+23);
-	ctx.restore();
-}
-
-var stage_prepare = true;
 function draw(ctx) {
 	ctx.clearRect(0,0, canvas.width, canvas.height);
-	//Notification area
-	ctx.save();
-	ctx.lineWidth="3";
-	ctx.strokeStyle="red";
-	ctx.strokeRect(430, 3, 350, 127);
-	ctx.restore();
 
-	if(stage_prepare) {
-		ctx.save();
-		ctx.font = '20px arial';
-		ctx.fillStyle = '#000';
-		ctx.textAlign="left";
-		ctx.fillText("Preparation stage", 433, 27);
-		ctx.font = '15px arial';
-		ctx.fillText("Please arranging your pieces on the bottom half of", 433, 57);
-		ctx.fillText("the board.", 433, 77);
-		ctx.restore();
-	}
-	//If prepare stage
-	if(stage_prepare) {
-		ctx.save();
-		ctx.lineWidth="5";
-		//ctx.setLineDash([6,6]);
-		ctx.strokeStyle="green";
-		ctx.strokeRect(430, 133, 350, 200);
-		ctx.restore();
-
-		render_chess(ctx, "hi", "#b69b4c", player_color[current_player], 438, 140);
-		render_chess(ctx, "hi", "#b69b4c", player_color[current_player], 438+CHESS_WIDTH+8, 140);
-		render_chess(ctx, "hi", "#b69b4c", player_color[current_player], 438+(CHESS_WIDTH+8)*2, 140);
-	}
 	//rect
 	loop_count++;
 	if(loop_count>=300) {
@@ -230,21 +253,24 @@ function draw(ctx) {
 			ctx.rect(get_draw_pos(i.x, i.y).x, get_draw_pos(i.x, i.y).y, CHESS_WIDTH, CHESS_HEIGHT);
 		}
 		//rect
+		ctx.fill();
 		ctx.stroke();
 
 		//shadow
-		ctx.shadowColor = '#111';
-		ctx.shadowBlur = 3;
-		ctx.shadowOffsetX = 1;
-		ctx.shadowOffsetY = 1;
+		//ctx.shadowColor = '#111';
+		//ctx.shadowBlur = 3;
+		//ctx.shadowOffsetX = 1;
+		//ctx.shadowOffsetY = 1;
 		//fill
 		if(get_draw_pos(i.x, i.y) == selected_chess)
 			ctx.fillStyle = 'lightblue';
 		else
 			//ctx.fillStyle = '#CCC';
-			ctx.fillStyle = '#b69b4c';
+			//ctx.fillStyle = '#b69b4c';
+			ctx.fillStyle = '#fff';
 		//if empty chess
 		//ctx.fillStyle = "rgba(255, 255, 255, 0)";
+		ctx.fill();
 
 		ctx.closePath();
 		ctx.restore();
@@ -257,8 +283,8 @@ function draw(ctx) {
 	ctx.setLineDash([]);
 	ctx.lineDashOffset = dash_count;
 	selected_chess_movable.forEach( (i) => {
-		ctx.lineWidth="3";
-		ctx.strokeStyle="rgba(0,255,0,"+1*Math.abs(loop_count-150)/150+")";
+		ctx.lineWidth="5";
+		ctx.strokeStyle="rgba(0,200,0,"+1*Math.abs(loop_count-150)/150+")";
 		ctx.strokeRect(i.x, i.y, CHESS_WIDTH, CHESS_HEIGHT);
 	});
 	ctx.stroke();
@@ -267,7 +293,7 @@ function draw(ctx) {
 
 	//text
 	ctx.font = '20px arial';
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = 'blue';
 	ctx.textAlign="left";
 	draw_array.forEach( (i) => {
 		if(!i.txt_visible)
