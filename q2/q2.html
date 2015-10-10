@@ -8,12 +8,19 @@
 	</head>
 	<body onload="all_init()">
 		<div id="board_container">
-			<canvas id="Board" width="469" height="650"></canvas>
+			<canvas id="Board" width="550" height="650"></canvas>
 			<div id="ctrl_panel">
-				<div style="margin: 150px 0 0 0 ">
+				<div style="margin: 0px 0 0 0 ">
 					<div>
 						<div style="color:orange;font-weight: bold; font-size: 150%;">Time Limit</div>
-						<input type="number" name="timer" id="timer" min="0" max="120" value="60" style="width: 70px; height: 35px;font-size:24px;"/>
+						<input type="number" name="timer" id="timer" min="0" max="120" value="600" style="width: 70px; height: 35px;font-size:24px;"/>
+					</div>
+					<br>
+					<div>
+						<select id="board_size">
+							<option value="0">10x15 (regular)</option>
+							<option value="1" selected>20x40 (large)</option>
+						</select>
 					</div>
 					<a href="#" class="button" id="start_button">START</a>
 					<a href="#" class="button" id="stop_button" style="visibility:hidden">STOP</a>
@@ -23,7 +30,6 @@
 				</div>
 			</div>
 		</div>
-		<script src="js/logic.js"></script>
 		<script src="js/ui.js"></script>
 	</body>
 </html>

@@ -1,7 +1,7 @@
 draw_array = [];
 draw_pos = [];
-CHESS_WIDTH = 50;
-CHESS_HEIGHT = 30;
+CHESS_WIDTH = 60;
+CHESS_HEIGHT = 33;
 player_color = { 0:"blue", 1:"red"}
 current_player = 0;
 //Prepare stage
@@ -11,22 +11,61 @@ selected_chess = "";	//draw_pos
 selected_chess_movable = [];
 mouse_start_pos = null;
 mouse_current_pos = null;
+//timer
+timer_value = 0;
+game_started = false;
+current_game_player = 0;
 //State machine
 chess_changed = true;
 
+function mytimer() {
+	if(game_started==true)
+	{
+		var i = document.getElementById("timer").value;
+		if(i>0)
+			document.getElementById("timer").value = i - 1;
+		else
+		{
+			alert("Time's up!");
+			game_started = false;
+		}
+	}
+}
+function timer_next_player() {
+	document.getElementById("timer").value = timer_value;
+}
+function GameStart() {
+	timer_value = document.getElementById("timer").value;
+	document.getElementById("timer").disabled = true;
+	document.getElementById("start_button").style.visibility = "hidden";
+	document.getElementById("stop_button").style.visibility = "visible";
+	game_started = true;
+}
+
+
+function GameStop() {
+	document.getElementById("timer").disabled = false;
+	document.getElementById("start_button").style.visibility = "visible";
+	document.getElementById("stop_button").style.visibility = "hidden";
+	game_started = false;
+}
+
 //set the positions to an array.
 function init() {
-	var x_arr = [5, 315];
+	var x_arr = [7, 370];
 	x_arr.forEach( (k) => {
 		for(var i=0; i<6; i++) {
-			draw_pos.push({x: 5, y: k});
-			draw_pos.push({x: 88, y: k});
-			draw_pos.push({x: 176, y: k});
-			draw_pos.push({x: 263, y: k});
-			draw_pos.push({x: 345, y: k});
-			k += 41;
+			draw_pos.push({x: 7, y: k});
+			draw_pos.push({x: 102, y: k});
+			draw_pos.push({x: 204, y: k});
+			draw_pos.push({x: 307, y: k});
+			draw_pos.push({x: 400, y: k});
+			k += 48;
 		}
 	});
+	document.getElementById("start_button").addEventListener("click", GameStart);
+	document.getElementById("stop_button").addEventListener("click", GameStop);
+	setInterval(mytimer, 1000);
 }
 
 function get_draw_pos(x, y) {	//-> draw_pos[x]
@@ -58,18 +97,40 @@ function canvas_down(e) {
 	mouse_start_pos = {x: e.offsetX, y: e.offsetY};
 	mouse_current_pos = {x: e.offsetX, y: e.offsetY};
 	coords = get_rect_obj(mouse_start_pos);
-	//console.log(coords);	
-	//console.log(get_draw_pos_index(coords));	
+	logic_coords = get_draw_pos_index(coords);
+	if(!logic_coords)
+		return;
+	chess = board.getLocationInstance(logic_coords.x, logic_coords.y).getChess();
+	if(chess.player != current_player || current_game_player != current_player)
+		return;
 	selected_chess = coords;
 	selected_chess_movable=[];
-	logic_coords = get_draw_pos_index(coords);
 	if(selected_chess && board.getLocationInstance(logic_coords.x, logic_coords.y).getChess()) {
 		pos = get_draw_pos_index(coords);
 		movable_location = board.GetMovableLocation(board.getLocationInstance(pos.x, pos.y));
 		movable_location.forEach((i) => selected_chess_movable.push(get_draw_pos(i.x, i.y)));
 	}
 }
+function AI_Move() {
+	do{
+	console.log("C=",current_player);
+	var myArray = board.GetChessList(1-current_player,true);
+	var rand = Math.floor(Math.random() * myArray.length);
+	var rand_chess = myArray[rand];
+	console.log("ERR",rand_chess);
+	var myArray2 = board.GetMovableLocation(board.GetChessLocation(rand_chess));
+	var rand = Math.floor(Math.random() * myArray2.length);
+	var rand_pos = myArray2[rand];
+	console.log(rand_chess, rand_pos);
+	}while(board.Move(rand_chess, rand_pos)==-1);
+	console.log("++++");
+	current_game_player = current_player;
+	timer_next_player();
+	update_draw_array();
+}
 function canvas_up(e) {
+	mouse_start_pos = null;
+	mouse_current_pos = null;
 	mouse_down = false;
 	mouse_current_pos = {x: e.offsetX, y: e.offsetY};
 	rect_obj = get_rect_obj(mouse_current_pos);
@@ -79,24 +140,21 @@ function canvas_up(e) {
 		targetLocationInstance = get_draw_pos_index(rect_obj);
 		ori_location_logic = board.getLocationInstance(ori_location.x, ori_location.y);
 		chess = ori_location_logic.getChess();
-		console.log(target_location.x, target_location.y);
+		if(chess.player != current_player)
+			return;
 		targetLocationInstance_logic = board.getLocationInstance(target_location.x, target_location.y);
-		board.Move(chess, targetLocationInstance_logic);
-		//Move command: for selected_chess, move to get_rect_obj(mouse_current_pos)
-		update_draw_array();
+		//Move!
+		if(board.Move(chess, targetLocationInstance_logic)!=-1)
+		{
+			timer_next_player();
+			current_game_player = 1-current_player;
+			setTimeout(AI_Move, Math.floor((Math.random() * 2000) + 1000));
+		}
+
 		selected_chess=null
 		selected_chess_movable=[];
-	}
-	mouse_start_pos = null;
-	mouse_current_pos = null;
-}
-
-function canvas_mousemove(e) {
-	if(!mouse_down)
-		return;
-	mouse_current_pos = {x: e.offsetX, y: e.offsetY}; 	
-}
-	
+	} update_draw_array(); } function canvas_mousemove(e) { if(!mouse_down) return; mouse_current_pos = {x: e.offsetX, y: e.offsetY}; 	
+} 
 var canvas;
 var ctx;
 function default_position(set) {
@@ -186,6 +244,8 @@ function all_init() {
 }
 
 function is_chess_visible(chess) {
+	if(chess.display==true)
+		return true;
 	if(chess.player == current_player)
 		return true;
 	else
@@ -196,7 +256,7 @@ function update_draw_array() {
 	resetChess();
 	board.locations.forEach( (i) => {
 		chess = i.getChess();
-		if(chess && chess!=null) {
+		if(chess && chess!=null && chess.chessStatus == ChessStatus.OnBoard) {
 			var visible = is_chess_visible(chess);
 			drawChess(Rank_zhHK[chess.rank], i.x, i.y, player_color[chess.player], visible);
 		}
@@ -296,18 +356,17 @@ function draw(ctx) {
     ctx.fillStyle = 'blue';
 	ctx.textAlign="left";
 	draw_array.forEach( (i) => {
-		if(!i.txt_visible)
+		if(!document.getElementById("debug").checked && !i.txt_visible)
 			return;
-		if(get_draw_pos(i.x, i.y) == selected_chess && mouse_down)
-		{
+		if(get_draw_pos(i.x, i.y) == selected_chess && mouse_down) {
 			ori_x = get_draw_pos(i.x, i.y).x;
 			ori_y = get_draw_pos(i.x, i.y).y;
 			ori_x = ori_x + (mouse_current_pos.x - mouse_start_pos.x);
 			ori_y = ori_y + (mouse_current_pos.y - mouse_start_pos.y);
 			ctx.rect(ori_x, ori_y, CHESS_WIDTH, CHESS_HEIGHT);
-			ctx.fillText(i.txt, ori_x+5, ori_y+23);
+			ctx.fillText(i.txt, ori_x+9, ori_y+25);
 		} else 
-			ctx.fillText(i.txt, get_draw_pos(i.x, i.y).x+5, get_draw_pos(i.x, i.y).y+23);
+			ctx.fillText(i.txt, get_draw_pos(i.x, i.y).x+9, get_draw_pos(i.x, i.y).y+25);
 	});
 }
 

@@ -1,23 +1,21 @@
 #Board {
-	background:url("../img/board.jpg");
-	background-repeat: no-repeat;
-	text-align:center;
     padding-left: 0;
     padding-right: 0;
+	vertical-align: middle;
 	float:left;
+	margin-left: 30px;
+	margin-top: 20px;
 }
 #board_container {
     margin-left: auto;
     margin-right: auto;
+	text-align:center;
     display: block;
-    width: 650px;
 }
 #ChessList {
-	background:url("../img/Luzhanqi_chinese_army_chess_board.jpg");
 	margin: 10px;
 }
 body {
-	//background-color: #005730;
 	background:url("../img/BackDrop.png");
 }
 #ctrl_panel {
@@ -25,7 +23,9 @@ body {
 	height: 555px;
 	display: inline;
 	float:right;
-	text-align: center;
+	text-align: left;
+	margin-right:100px;
+	margin-top: 70px;
 }
 
 .button {
