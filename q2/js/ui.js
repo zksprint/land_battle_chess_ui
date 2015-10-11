@@ -18,9 +18,10 @@ var current_game_player = 0;
 //State machine
 var chess_changed = true;
 // Enum type for Chess status
-var GemStatus = {"Destroying":1, "Ongoing":2, "Moving":3}
+var GemStatus = {"Destroying":1, "Ongoing":2, "Moving":3, "Destroyed":4}
 Object.freeze(GemStatus);		//Enum syntax for Javascript
 
+var SS=false;
 var Move = 3;
 class Gem {
 	constructor(color, gemStatus) {
@@ -33,17 +34,53 @@ class Gem {
 		this.src_y = src_y;
 		this.dst_x = dst_x;
 		this.dst_y = dst_y;
-		this.gemStatus = GemStatus.Moving;
+		if(this.gemStatus==GemStatus.Ongoing)
+			this.gemStatus = GemStatus.Moving;
 		this.draw_pos = calLocation(src_x, src_y);
 		this.draw_pos_dst = calLocation(dst_x, dst_y);
 	}
+	destroy() {
+		this.gemStatus = GemStatus.Destroying;
+	}
 	draw() {
+		if(this.gemStatus == GemStatus.Destroyed) 
+			return;
+		if(!(this.draw_pos[0] == this.draw_pos_dst[0] && this.draw_pos[1] == this.draw_pos_dst[1])) {
+			var w = (canvas.width-8)/size_x-4;
+			var h = (canvas.height-8)/size_y-4;
+			if(this.draw_pos[0] > this.draw_pos_dst[0])
+				this.draw_pos[0] -= Move;
+			if(this.draw_pos[0] < this.draw_pos_dst[0])
+				this.draw_pos[0] += Move;
+			if(this.draw_pos[1] > this.draw_pos_dst[1])
+				this.draw_pos[1] -= Move;
+			if(this.draw_pos[1] < this.draw_pos_dst[1])
+				this.draw_pos[1] += Move;
+			if(Math.abs(this.draw_pos[0] - this.draw_pos_dst[0]) < 3)
+				this.draw_pos[0] = this.draw_pos_dst[0];
+			if(Math.abs(this.draw_pos[1] - this.draw_pos_dst[1]) < 3)
+				this.draw_pos[1] = this.draw_pos_dst[1];
+			if(SS==true)
+			console.log(this.draw_pos[0] , this.draw_pos_dst[0] , this.draw_pos[1] , this.draw_pos_dst[1]);
+			ctx.drawImage(img, colorImg[this.color][0], colorImg[this.color][1], 60, 60, this.draw_pos[0], this.draw_pos[1], w, h);
+			return;
+		} else if(this.gemStatus == GemStatus.Destroying) {
+			this.counter += 1;
+			if(this.counter>=7) {
+				this.counter=0;
+				this.gemStatus = GemStatus.Destroyed;
+				return;
+			}
+			var w = (canvas.width-8)/size_x-4;
+			var h = (canvas.height-8)/size_y-4;
+			w = w/7*this.counter;
+			h = h/7*this.counter;
+			ctx.drawImage(img, colorImg[this.color][0], colorImg[this.color][1], 60, 60, this.draw_pos[0], this.draw_pos[1], w, h);
+			return;
+		} 
+		this.gemStatus = GemStatus.Ongoing;
 		var w = (canvas.width-8)/size_x-4;
 		var h = (canvas.height-8)/size_y-4;
-		if(this.draw_pos[0] < this.draw_pos_dst[0])
-			this.draw_pos[0] += Move;
-		if(this.draw_pos[1] < this.draw_pos_dst[1])
-			this.draw_pos[1] += Move;
 		ctx.drawImage(img, colorImg[this.color][0], colorImg[this.color][1], 60, 60, this.draw_pos[0], this.draw_pos[1], w, h);
 	}
 }
@@ -102,7 +139,6 @@ function GameStop() {
 }
 
 //set the positions to an array.
-var gem = new Gem();
 function init() {
 	var x_arr = [7, 370];
 	x_arr.forEach( (k) => {
@@ -132,49 +168,13 @@ function get_draw_pos_index(obj) { // draw_pos[x] => x,y
 		return {x:index%5, y:Math.floor(index/5)};
 }
 
-function get_rect_obj(coordinate){ //-> draw_pos[x]
-    canvasX = coordinate.x;
-    canvasY = coordinate.y;
-	var inside;
-	draw_pos.forEach( (i) => {
-		if( (i.x <= canvasX && canvasX <= i.x+CHESS_WIDTH) &&
-			(i.y <= canvasY && canvasY <= i.y+CHESS_HEIGHT))
-			inside = i;
-	});
-	return inside;
-}
-
 function canvas_down(e) {
-	mouse_down = true;
-	selected_down = board.getLogicPos(e.offsetX, e.offsetY)
+	selected_pos = board.getLogicPos(e.offsetX, e.offsetY)
 }
 
 function canvas_up(e) {
-	mouse_start_pos = null;
-	mouse_current_pos = null;
-	mouse_down = false;
-	mouse_current_pos = {x: e.offsetX, y: e.offsetY};
-	rect_obj = get_rect_obj(mouse_current_pos);
-	if(rect_obj && selected_chess) {
-		ori_location = get_draw_pos_index(selected_chess);
-		target_location = get_draw_pos_index(rect_obj);
-		targetLocationInstance = get_draw_pos_index(rect_obj);
-		ori_location_logic = board.getLocationInstance(ori_location.x, ori_location.y);
-		chess = ori_location_logic.getChess();
-		if(chess.player != current_player)
-			return;
-		targetLocationInstance_logic = board.getLocationInstance(target_location.x, target_location.y);
-		//Move!
-		if(board.Move(chess, targetLocationInstance_logic)!=-1)
-		{
-			timer_next_player();
-			current_game_player = 1-current_player;
-			setTimeout(AI_Move, Math.floor((Math.random() * 2000) + 1000));
-		}
-
-		selected_chess=null
-		selected_chess_movable=[];
-	} update_draw_array(); } function canvas_mousemove(e) { if(!mouse_down) return; mouse_current_pos = {x: e.offsetX, y: e.offsetY}; 	
+	var target_pos = board.getLogicPos(e.offsetX, e.offsetY);
+	board.swap(selected_pos[0], selected_pos[1], target_pos[0], target_pos[1]);
 } 
 var canvas;
 var ctx;
@@ -187,8 +187,6 @@ function all_init() {
 	init();
 	canvas.addEventListener('mousedown', canvas_down);
 	canvas.addEventListener('mouseup', canvas_up);
-	canvas.addEventListener('mouseleave', canvas_up);
-	canvas.addEventListener('mousemove', canvas_mousemove);
 	setInterval( () => { draw(ctx);});
 	update_draw_array();
 }
@@ -224,7 +222,32 @@ var loop_count=0;
 var size_x;
 var size_y;
 var size;
+var GameStatus = {"Ongoing":1, "Moving":2, "Destroying":3}
+var gameStatus = GameStatus.Ongoing;
+
+var pause_timer = 100;
 function draw(ctx) {
+	if(board) {
+		gameStatus = GameStatus.Ongoing;
+		board.arr.forEach( (i) => {
+			if(i.gemStatus == GemStatus.Moving)
+				gameStatus = GameStatus.Moving;
+		});
+		if(gameStatus == GameStatus.Ongoing) {
+			for(var i=0; i<size_x; i++)
+				board.fillCol(i);
+			for(var i=0; i<size_y; i++)
+				board.fillRow(i);
+			//finished moving
+			if(pause_timer>0)
+				pause_timer--;
+			else {
+				board.clearCollision();
+				pause_timer = 100;
+			}
+		}
+	}
+
 	size=document.getElementById("board_size").value;
 	if(size==0) {
 		canvas.width=450;
@@ -313,8 +336,10 @@ class Board {
 			B.push(this.getGem(x+i[0], y));
 			B.push(this.getGem(x+i[1], y));
 			B.push(this.getGem(x+i[2], y));
-			if(B[0] && B[1] && B[2])
 			if(B[0] && B[1] && B[2] &&
+				B[0].gemStatus==GemStatus.Ongoing &&
+				B[1].gemStatus==GemStatus.Ongoing &&
+				B[2].gemStatus==GemStatus.Ongoing &&
 				B[0].color == B[1].color &&
 				B[1].color == B[2].color) {
 				//add horizontal list
@@ -381,8 +406,103 @@ class Board {
 		return;
 	}
 	getLogicPos(mouseX, mouseY) {
-		var x = (canvas.width-8)/size_x-4;
-		var y = (canvas.height-8)/size_y-4;
-		return [Math.floor((mouseX-2)/x), Math.floor((mouseY-2)/y)];
+		var x = (canvas.width-8)/size_x;
+		var y = (canvas.height-8)/size_y;
+		return [Math.floor((mouseX-4)/x), Math.floor((mouseY-4)/y)];
+	}
+	clearCollision() {
+		var total = []
+		for(var i=0; i<size_x; i++)
+			for(var j=0; j<size_y; j++)
+				this.returnCollision(i,j).forEach( (x) => total.push(x));
+		var uniqueArray = total.filter(function(item, pos, self) {
+			    return self.indexOf(item) == pos;
+		})
+		uniqueArray.forEach( (i) => {
+			if(i.gemStatus != GemStatus.Destroying && i.gemStatus != GemStatus.Destroyed)
+				i.destroy();
+		});
+	}
+	
+	fillCol(x) {
+		var ptr1 = size_y-1;
+		var ptr2 = size_y-1;
+		var newPos=[];
+		while(ptr1>=0 && ptr2>=0) {
+			var gem1 = this.getGem(x, ptr1);
+			var gem2 = this.getGem(x, ptr2);
+			if(gem1.gemStatus==GemStatus.Destroyed){
+				do {
+					if(ptr2<0) {
+						break;
+					}
+					if(this.getGem(x,ptr2).gemStatus!=GemStatus.Destroyed) {
+						newPos.push([ptr1,ptr2]);
+						break;
+					}
+					ptr2--;
+				} while(1)
+			} else if(ptr1!=ptr2) {
+				newPos.push([ptr1,ptr2]);
+			}
+			ptr1--;
+			ptr2--;
+		}
+		newPos.forEach( (i) => {
+			this.forceSwap(x,i[0],x,i[1]);
+		});
+	}
+	fillRow(x) {
+		var ptr1 = size_x-1;
+		var ptr2 = size_x-1;
+		var newPos=[];
+		while(ptr1>=0 && ptr2>=0) {
+			var gem1 = this.getGem(ptr1,x);
+			var gem2 = this.getGem(ptr2,x);
+			if(gem1.gemStatus==GemStatus.Destroyed){
+				do {
+					if(ptr2<0) {
+						break;
+					}
+					if(this.getGem(ptr2,x).gemStatus!=GemStatus.Destroyed) {
+						newPos.push([ptr1,ptr2]);
+						break;
+					}
+					ptr2--;
+				} while(1)
+			} else if(ptr1!=ptr2) {
+				newPos.push([ptr1,ptr2]);
+			}
+			ptr1--;
+			ptr2--;
+		}
+		newPos.forEach( (i) => {
+			this.forceSwap(i[0],x,i[1],x);
+		});
+	}
+	forceSwap(ori_x,ori_y,dst_x,dst_y) {
+		var tmp = this.arr[ori_x*size_y+ori_y];
+		this.arr[ori_x*size_y+ori_y] = this.arr[dst_x*size_y+dst_y];
+		this.arr[dst_x*size_y+dst_y] = tmp;
+		board.getGem(ori_x, ori_y).move(dst_x, dst_y, ori_x, ori_y);
+		board.getGem(dst_x, dst_y).move(ori_x, ori_y, dst_x, dst_y);
+	}
+	swap(ori_x,ori_y,dst_x,dst_y) {
+		var cond1 = Math.abs(ori_x - dst_x);
+		var cond2 = Math.abs(ori_y - dst_y);
+		if(!((cond1==1 && cond2==0) || (cond1==0&&cond2==1)))
+			return;
+		//swap
+		var tmp = this.arr[ori_x*size_y+ori_y];
+		this.arr[ori_x*size_y+ori_y] = this.arr[dst_x*size_y+dst_y];
+		this.arr[dst_x*size_y+dst_y] = tmp;
+		if(this.returnCollision(ori_x, ori_y).length>0 || this.returnCollision(dst_x, dst_y).length>0) {
+			board.getGem(ori_x, ori_y).move(dst_x, dst_y, ori_x, ori_y);
+			board.getGem(dst_x, dst_y).move(ori_x, ori_y, dst_x, dst_y);
+		} else {
+			var tmp = this.arr[ori_x*size_y+ori_y];
+			this.arr[ori_x*size_y+ori_y] = this.arr[dst_x*size_y+dst_y];
+			this.arr[dst_x*size_y+dst_y] = tmp;
+		}
 	}
 }

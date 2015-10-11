@@ -206,8 +206,33 @@ class Board {
 		return ret;
 	}
 
+	GetPlaceableLocation(chess, ori_location) {
+		var tmpLoc = [];
+		for(var i=0; i<5; i++) {
+			for(var j=6; j<12; j++) {
+				var tmp = getLocationInstance(i,j);
+				if(chess.rank==11) {
+					if(tmp.locationType=="headquarters")
+						tmpLoc.push(getLocationInstance(i,j));
+				} else if(cless.rank==9) {
+					if(j>=10)
+						tmpLoc.push(getLocationInstance(i,j));
+				} else if(cless.rank==10) {
+					if(j>=8)
+						tmpLoc.push(getLocationInstance(i,j));
+				}
+			}
+		}
+	}
+		
 	// List the movable location for a chess on a particular location
 	GetMovableLocation(ori_location) {
+		if(ori_location.getChess) {
+			var tmp = ori_location.getChess;
+			if(tmp.rank == 9 || 
+				ori_location.locationType=="headquarters")
+				return;
+		}
 		var queue = [];
 		var visited = [];
 		var movable = [];
