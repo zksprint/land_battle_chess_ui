@@ -107,8 +107,17 @@ function canvas_down(e) {
 	selected_chess_movable=[];
 	if(selected_chess && board.getLocationInstance(logic_coords.x, logic_coords.y).getChess()) {
 		pos = get_draw_pos_index(coords);
-		movable_location = board.GetMovableLocation(board.getLocationInstance(pos.x, pos.y));
-		movable_location.forEach((i) => selected_chess_movable.push(get_draw_pos(i.x, i.y)));
+		if(game_started==true) {
+			movable_location = board.GetMovableLocation(board.getLocationInstance(pos.x, pos.y));
+			movable_location.forEach((i) => selected_chess_movable.push(get_draw_pos(i.x, i.y)));
+		} else {
+			movable_location = board.GetPlaceableLocation(board.getLocationInstance(pos.x, pos.y));
+			movable_location.forEach((i) => { 
+				if(board.GetPlaceableLocation(i).indexOf(board.getLocationInstance(pos.x,pos.y))>-1){
+					selected_chess_movable.push(get_draw_pos(i.x, i.y));
+				}
+			});
+		}
 	}
 }
 function AI_Move() {
@@ -143,12 +152,15 @@ function canvas_up(e) {
 		if(chess.player != current_player)
 			return;
 		targetLocationInstance_logic = board.getLocationInstance(target_location.x, target_location.y);
-		//Move!
-		if(board.Move(chess, targetLocationInstance_logic)!=-1)
-		{
-			timer_next_player();
-			current_game_player = 1-current_player;
-			setTimeout(AI_Move, Math.floor((Math.random() * 2000) + 1000));
+		if(game_started == false) {
+			board.swap(ori_location_logic, targetLocationInstance_logic);
+		} else {
+			if(board.Move(chess, targetLocationInstance_logic)!=-1)
+			{
+				timer_next_player();
+				current_game_player = 1-current_player;
+				setTimeout(AI_Move, Math.floor((Math.random() * 2000) + 1000));
+			}
 		}
 
 		selected_chess=null

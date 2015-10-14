@@ -13,11 +13,11 @@ Engineer on the rail can turn around at the conner.
 Chess on headquarter is not movable.
 Chess on camp is invincible to attack.
 Land mine is not movable.
+If Field Marshal is dead, reveal the flag to opponent.
 
 
 The Flag must be placed on one of the two Headquarters squares.
 The Landmines must be placed somewhere in the two rows closest to the player (i.e., the Headquarters row, or the one next to that).
 The Grenades may not be placed on the front row (but you probably wouldn’t want them there anyway).
 
-If Field Marshal is dead, reveal the flag to opponent.
 Player who capture the enemy's flag first will win the game.

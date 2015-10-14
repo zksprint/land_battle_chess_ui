@@ -125,14 +125,23 @@ function GameStart() {
 	board = new Board(size_x, size_y);
 	timer_value = document.getElementById("timer").value;
 	document.getElementById("timer").disabled = true;
+	document.getElementById("difficulty").disabled = true;
+	document.getElementById("board_size").disabled = true;
 	document.getElementById("start_button").style.visibility = "hidden";
 	document.getElementById("stop_button").style.visibility = "visible";
 	game_started = true;
+}
+function difficulty() {
+	console.log("A");
+	console.log(document.getElementById("difficulty").value+1);
+	document.getElementById("timer").value = (document.getElementById("difficulty").value)*60
 }
 
 
 function GameStop() {
 	document.getElementById("timer").disabled = false;
+	document.getElementById("difficulty").disabled = false;
+	document.getElementById("board_size").disabled = false;
 	document.getElementById("start_button").style.visibility = "visible";
 	document.getElementById("stop_button").style.visibility = "hidden";
 	game_started = false;

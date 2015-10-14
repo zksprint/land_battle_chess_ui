@@ -206,23 +206,29 @@ class Board {
 		return ret;
 	}
 
-	GetPlaceableLocation(chess, ori_location) {
+	GetPlaceableLocation(ori_location) {
 		var tmpLoc = [];
+		var chess = ori_location.getChess();
 		for(var i=0; i<5; i++) {
 			for(var j=6; j<12; j++) {
-				var tmp = getLocationInstance(i,j);
+				var tmp = this.getLocationInstance(i,j);
+				if(tmp.locationType=="camp")
+					continue;
 				if(chess.rank==11) {
 					if(tmp.locationType=="headquarters")
-						tmpLoc.push(getLocationInstance(i,j));
-				} else if(cless.rank==9) {
+						tmpLoc.push(this.getLocationInstance(i,j));
+				} else if(chess.rank==9) {
 					if(j>=10)
-						tmpLoc.push(getLocationInstance(i,j));
-				} else if(cless.rank==10) {
+						tmpLoc.push(this.getLocationInstance(i,j));
+				} else if(chess.rank==10) {
 					if(j>=8)
-						tmpLoc.push(getLocationInstance(i,j));
+						tmpLoc.push(this.getLocationInstance(i,j));
+				} else {
+					tmpLoc.push(this.getLocationInstance(i,j));
 				}
 			}
 		}
+		return tmpLoc;
 	}
 		
 	// List the movable location for a chess on a particular location
@@ -263,6 +269,18 @@ class Board {
 	}
 
 
+	swap(ori_location, target_location) {
+		var ori_chess = ori_location.getChess();
+		var target_chess = target_location.getChess();
+		console.log(this.GetPlaceableLocation(ori_location));
+		if (this.GetPlaceableLocation(ori_location).indexOf(target_location)>-1 &&
+			this.GetPlaceableLocation(target_location).indexOf(ori_location)>-1) {
+			console.log(target_chess, ori_chess);
+			ori_location.setChess(target_chess);
+			console.log(target_chess, ori_chess);
+			target_location.setChess(ori_chess);
+		}
+	}
 
 	Move(chess, newLocation) {
 		var ori_location = this.GetChessLocation(chess);

@@ -13,10 +13,17 @@
 				<div style="margin: 0px 0 0 0 ">
 					<div>
 						<div style="color:orange;font-weight: bold; font-size: 150%;">Time Limit</div>
-						<input type="number" name="timer" id="timer" min="0" max="120" value="600" style="width: 70px; height: 35px;font-size:24px;"/>
+						<input type="number" name="timer" id="timer" disabled min="0" max="120" value="300" style="width: 70px; height: 35px;font-size:24px;"/>
 					</div>
 					<br>
 					<div>
+						<select id="difficulty" onchange="difficulty()">
+							<option value="5" selected>Very Easy</option>
+							<option value="4">Easy</option>
+							<option value="3">Middle</option>
+							<option value="2">Hard</option>
+							<option value="1">Very Hard</option>
+						</select>
 						<select id="board_size">
 							<option value="0">10x15 (regular)</option>
 							<option value="1" selected>20x40 (large)</option>
