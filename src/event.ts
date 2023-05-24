@@ -1,6 +1,6 @@
-import { getDrawPos, getDrawPosIndex, getRectObj } from 'src/draw';
-import { current_player } from 'src/init';
-import { AI_Move, board, game_started, timerNextPlayer, updateDrawArray } from 'src/main';
+import { getDrawPos, getDrawPosIndex, getRectObj } from './draw';
+import { current_player } from './init';
+import { AI_Move, board, game_started, timerNextPlayer, updateDrawArray } from './main';
 
 export let mouse_down = false;
 export let mouse_start_pos:any;

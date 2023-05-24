@@ -1,29 +1,10 @@
-
 {
-    "compilerOptions": {
-      "target": "es5",                       // 目标 ECMAScript 版本
-      "module": "commonjs",                  // 模块解析方式
-      "strict": true,                        // 启用所有严格类型检查选项
-      "esModuleInterop": true,                // 启用 CommonJS 和 ES 模块之间的互操作性
-      "outDir": "./dist",                     // 输出目录
-      "baseUrl": "./",                       // 基本解析的路径
-      "sourceMap": true,                     // 生成源映射文件
-      "resolveJsonModule": true,             // 支持导入 JSON 模块
-      "experimentalDecorators": true,        // 启用装饰器支持
-      "strictNullChecks": true,              // 严格检查 null 值
-      "moduleResolution": "node",            // 模块解析策略
-      "allowSyntheticDefaultImports": true,  // 允许默认导入
-      "noImplicitAny": true,                 // 不允许隐式 any 类型
-      "declaration": true,                    // 生成声明文件
-      "lib": [
-        "ESNext", "es6","DOM"
-    ],
-    },
-    "include": [
-      "src/**/*.ts"                         // 包含的文件
-    ],
-    "exclude": [
-      "node_modules"                        // 排除的文件夹
-    ]
+  "include": [
+      "src/**/*.ts"
+  ],
+  "compilerOptions": {
+      "noImplicitAny": true,
+      "target": "es5",
+      "lib": ["ES2015", "DOM"]
   }
-  
+}
