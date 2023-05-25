@@ -59,7 +59,7 @@ export class Board {
 
   // After Field Marshal died, the flag will be reveal 
   RevealFlag(player: number) {
-    this.GetChessList(player).forEach((chess) => {
+    this.GetChessList(player,false).forEach((chess) => {
       if (chess.rank == Rank.Flag) {
         chess.displayed = true;
       }
@@ -85,19 +85,29 @@ export class Board {
         return location
       }
     }
+    console.log("error GetChessLocation not find chess:",chess.rank)
     return undefined;
   }
 
   // Return a list of chess for that player.
   // All the chess belongs to the player will be returned,
   // no matter died or alive.
-  GetChessList(player: number): Chess[] {
+  GetChessList(player: number,OnBoard:boolean=false ): Chess[] {
     let chessList:Chess[] = [];
-    this.chessList.forEach(chess => {
-      if (chess.player == player) {
+    for(const chess of this.chessList){
+      if(chess.player != player){
+        continue;
+      }
+      if(OnBoard){
+        if (chess.chessStatus==ChessStatus.OnBoard ) {
+          chessList.push(chess);
+        }
+      }else{
         chessList.push(chess)
       }
-    })
+
+    }
+
     return chessList;
   }
 
@@ -114,22 +124,23 @@ export class Board {
   private getPlayableLocation(x: number, chess: Chess, locations: Location[]) {
     for (let y = 6; y < this.rowCnt; y++) {
       let tmp = this.getLocationInstance(x, y);
+      //行营不能放置 
       if (tmp.locationType == LocationType.Camp) {
         continue;
       }
 
       switch (chess.rank) {
-        case 11:
+        case 11: //大本营
           if (tmp.locationType == LocationType.Headquarters) {
             locations.push(this.getLocationInstance(x, y));
           }
           break;
-        case 10:
-          if (y >= 8) {
+        case 10://炸弹只能放在次2行
+          if (y >= 7) {
             locations.push(this.getLocationInstance(x, y));
           }
           break;
-        case 9:
+        case 9: //
           if (y >= 10) {
             locations.push(this.getLocationInstance(x, y));
           }
@@ -144,8 +155,12 @@ export class Board {
   GetPlaceableLocation(oriLocation: Location): Location[] {
     let tmpLoc:Location[] = [];
     let chess = oriLocation.getChess();
+    if(!chess){
+      return tmpLoc
+    }
+
     for (let x = 0; x < this.columnCnt; x++) {
-      this.getPlayableLocation(x, chess!, tmpLoc)
+      this.getPlayableLocation(x, chess, tmpLoc)
     }
     return tmpLoc;
   }
@@ -168,15 +183,15 @@ export class Board {
     let visited:any = [];
     let movable = [];
     if (oriLocation.getChess()?.rank == 9 || oriLocation.locationType == LocationType.Headquarters) {
-      return;
+      return [];
     }
 
     visited.push(oriLocation);
     oriLocation.edges.forEach((location) => queue.push(location));
     while (queue.length > 0) {
       let targetLocation = queue.shift();
-      let [movable1, movable2] = is_movable(oriLocation, targetLocation);
       visited.push(targetLocation);
+      let [movable1, movable2] = is_movable(oriLocation, targetLocation);
       if (movable1) {
         movable.push(targetLocation);
       }
@@ -246,7 +261,23 @@ export class Board {
     return 0
   }
 
-  private isOnRail(_i: number, _j: number): boolean {
+  private isOnRail(x: number, y: number): boolean {
+    //第一行和最后一行
+    if(y == 0 || y == 11){
+      return false
+    }
+
+    if(y == 1 || y == 5 || y == 6 || y== 10){
+      return true
+    }
+
+    if(y == 2 || y == 3 || y == 4 || y == 7 || y==8){
+      if(x==0 || x == 4){
+        return true
+      }
+      return false
+    }
+
     return false
   }
 
@@ -296,7 +327,7 @@ function is_movable(oriLocation: Location, targetLocation: Location) {
     enemyChess = 0;	//our chess
   }
 
-  //for direct linkage 不是在铁路上且位置相邻
+  //for direct linkage 不是在铁路上但是位置相邻
   if (!oriLocation.isOnRail && oriLocation.edges.indexOf(targetLocation) != -1) {
     if (enemyChess == 0) {
       return [false, false];

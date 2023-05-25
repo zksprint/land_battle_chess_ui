@@ -32,7 +32,7 @@ export function init(): void {
 
 export function default_position(set:number) {
 	if ( set == 1 ) {
-		let p1 = board.GetChessList( 0 );
+		let p1 = board.GetChessList( 0, false);
 		//1
 		board.getLocationInstance( 0, 6 ).setChess( p1[0] );
 		board.getLocationInstance( 1, 6 ).setChess( p1[1] );
@@ -101,10 +101,11 @@ export function default_position(set:number) {
 	}
 }
 
-
+export let canvas:HTMLCanvasElement;
+export let ctx :CanvasRenderingContext2D;
 export function all_init() {
-  let canvas = document.getElementById("Board") as HTMLCanvasElement;
-	let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+  canvas = document.getElementById("Board") as HTMLCanvasElement;
+	ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 	resetChess();
 	init();
 	default_position(1);
@@ -112,9 +113,9 @@ export function all_init() {
 	canvas.addEventListener( 'mouseup', canvasUp );
 	canvas.addEventListener( 'mouseleave', canvasUp );
 	canvas.addEventListener( 'mousemove', canvasMousemove );
-	setInterval( () => { draw( ctx,canvas ); } );
+	setInterval( () => { draw( ctx ); } );
 	updateDrawArray();
-	draw( ctx,canvas );
+	draw( ctx );
 }
 
 export function isChessVisible(chess:Chess):boolean {

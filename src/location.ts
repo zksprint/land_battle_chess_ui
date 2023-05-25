@@ -15,7 +15,7 @@ export enum LocationType {
 // Represent a movable location on the board
 export class Location {
   edges: Location[] = [];
-  chess: Chess | undefined;
+  chess: Chess | null;
   x: number;
   y: number;
   isOnRail: boolean = false;
@@ -30,7 +30,7 @@ export class Location {
 
   // edge is the connection between the locations
   addEdge(linkedLocation: Location) {
-    if (this.edges.indexOf(linkedLocation) < 0) {
+    if (this.edges.indexOf(linkedLocation) == -1) {
       this.edges.push(linkedLocation);
     }
   }
@@ -43,7 +43,7 @@ export class Location {
     this.chess = undefined;
   }
 
-  getChess():Chess | undefined {
+  getChess():Chess | null {
     return this.chess;
   }
 }

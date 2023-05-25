@@ -1,6 +1,6 @@
 
 import { mouse_current_pos, mouse_down, mouse_start_pos, selected_chess, selected_chess_movable } from "./event";
-import { draw_pos } from "./init";
+import { canvas, draw_pos } from "./init";
 import { CHESS_HEIGHT, CHESS_WIDTH } from "./main";
 
 export let draw_array: { txt: string; x: number; y: number; color: string; txt_visible: boolean; }[]= [];
@@ -43,10 +43,9 @@ export function drawChess( txt: string, x: number, y: number, color: string, txt
 	draw_array.push( { txt: txt, x: x, y: y, color: color, txt_visible: txt_visible } );
 }
 
-
-export function draw( ctx:CanvasRenderingContext2D,canvas:HTMLCanvasElement ) {
-  let dash_count = 0;
-  let loop_count = 0;
+let dash_count = 0;
+let loop_count = 0;
+export function draw( ctx:CanvasRenderingContext2D ) {
 	ctx.clearRect( 0, 0, canvas.width, canvas.height );
 
 	//rect

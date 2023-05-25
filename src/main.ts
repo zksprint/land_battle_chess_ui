@@ -61,17 +61,21 @@ export function GameStop(): void {
 
 export function AI_Move() {
 	do {
-		console.log( "C=", current_player );
-		var myArray = board.GetChessList( 1 - current_player );
+		console.log( "Current player", current_player );
+		var myArray = board.GetChessList( 1 - current_player ,true);
 		var rand = Math.floor( Math.random() * myArray.length );
 		var rand_chess = myArray[rand];
-		console.log( "ERR", rand_chess );
-		var myArray2 = board.GetMovableLocation( board.GetChessLocation( rand_chess )! );
-		var rand = Math.floor( Math.random() * myArray2!.length );
-		var rand_pos = myArray2![rand];
-		console.log( rand_chess, rand_pos );
+		console.log( "randChess:", rand_chess.rank );
+
+		var myArray2 = board.GetMovableLocation( board.GetChessLocation( rand_chess ));
+    console.log("AI_Move moveable array lenght:", myArray2.length);
+    if(myArray2.length == 0){
+      continue;
+    }
+
+		var rand = Math.floor( Math.random() * myArray2.length );
+		var rand_pos = myArray2[rand];
 	} while ( board.Move( rand_chess, rand_pos ) == -1 );
-	console.log( "++++" );
   setCurrentGamePlayer(current_player)
 	timerNextPlayer();
 	updateDrawArray();
@@ -95,7 +99,7 @@ export function updateDrawArray() {
 	board.locations.forEach( ( i ) => {
 		let chess = i.getChess();
 		if ( chess && chess != null && chess.chessStatus == ChessStatus.OnBoard ) {
-			var visible = isChessVisible( chess );
+			let visible = isChessVisible( chess );
 			drawChess(Rank_zhHK[chess.rank], i.x, i.y, player_color[chess.player], visible );
 		}
 	} );
