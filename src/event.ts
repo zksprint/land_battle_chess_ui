@@ -9,6 +9,15 @@ export let selected_chess: any;  // draw_pos
 export let selected_chess_movable: any = [];
 export let current_game_player = 0;
 
+export function initEventsValue() {
+   mouse_down = false;
+   mouse_start_pos = undefined;
+   mouse_current_pos = undefined;
+   selected_chess = undefined;
+   selected_chess_movable = [];
+   current_game_player = 0;
+}
+
 //鼠标点击事件
 export function canvasDown(e: MouseEvent): void {
   mouse_down = true;

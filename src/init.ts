@@ -1,7 +1,7 @@
 import { Chess, ChessStatus } from "./chess";
-import { draw, resetChess } from "./draw";
-import { canvasDown, canvasMousemove, canvasUp } from "./event";
-import { GameStart, GameStop, board, myTimer, updateDrawArray } from "./main";
+import { draw, initDraw, resetChess } from "./draw";
+import { canvasDown, canvasMousemove, canvasUp, initEventsValue } from "./event";
+import { GameStart, GameStop, board, myTimer, resetBoard, updateDrawArray } from "./main";
 
 export let draw_pos:any = [];
 
@@ -10,6 +10,8 @@ export let current_player = 0;
 
 export function init(): void {
   const x_arr = [7, 370];
+	draw_pos = []
+	current_player = 0;
   x_arr.forEach(offset => {
     for (let i = 0; i < 6; i++) {
       draw_pos.push({ x: 7, y: offset });
@@ -101,13 +103,17 @@ export function default_position(set:number) {
 	}
 }
 
+
 export let canvas:HTMLCanvasElement;
 export let ctx :CanvasRenderingContext2D;
 export function all_init() {
-  canvas = document.getElementById("Board") as HTMLCanvasElement;
-	ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 	resetChess();
 	init();
+	initDraw()
+	initEventsValue()
+	resetBoard()
+  canvas = document.getElementById("Board") as HTMLCanvasElement;
+	ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 	default_position(1);
 	canvas.addEventListener( 'mousedown', canvasDown );
 	canvas.addEventListener( 'mouseup', canvasUp );

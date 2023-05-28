@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta charset="utf-8">
+	<title>Land Battle Chess</title>
+	<!-- <link rel="stylesheet" type="text/css" href="main.css"> -->
+	<style>
+		.Board {
+			background: url("./images/board.jpg");
+			background-repeat: no-repeat;
+			text-align: center;
+			padding-left: 0;
+			padding-right: 0;
+			float: left;
+		}
+
+		.board_container {
+			margin-left: auto;
+			margin-right: auto;
+			display: block;
+			width: 650px;
+		}
+
+		.ChessList {
+			background: url("./images/Luzhanqi_chinese_army_chess_board.jpg");
+			margin: 10px;
+		}
+
+		body {
+			background: url("./images/BackDrop.png");
+		}
+
+		.ctrl_panel {
+			width: 180px;
+			height: 555px;
+			display: inline;
+			float: right;
+			text-align: center;
+		}
+
+		.button {
+			display: inline-block;
+			-moz-box-shadow: inset 0px 1px 0px 0px #dcecfb;
+			-webkit-box-shadow: inset 0px 1px 0px 0px #dcecfb;
+			box-shadow: inset 0px 1px 0px 0px #dcecfb;
+			background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #bddbfa), color-stop(1, #80b5ea));
+			background: -moz-linear-gradient(center top, #bddbfa 5%, #80b5ea 100%);
+			filter: progid: DXImageTransform.Microsoft.gradient(startColorstr='#bddbfa', endColorstr='#80b5ea');
+			background-color: #bddbfa;
+			-webkit-border-top-left-radius: 0px;
+			-moz-border-radius-topleft: 0px;
+			border-top-left-radius: 0px;
+			-webkit-border-top-right-radius: 0px;
+			-moz-border-radius-topright: 0px;
+			border-top-right-radius: 0px;
+			-webkit-border-bottom-right-radius: 0px;
+			-moz-border-radius-bottomright: 0px;
+			border-bottom-right-radius: 0px;
+			-webkit-border-bottom-left-radius: 0px;
+			-moz-border-radius-bottomleft: 0px;
+			border-bottom-left-radius: 0px;
+			text-indent: 0;
+			border: 2px solid #84bbf3;
+			display: inline-block;
+			color: #ffffff;
+			font-family: Arial;
+			font-size: 15px;
+			font-weight: bold;
+			font-style: normal;
+			height: 40px;
+			line-height: 40px;
+			width: 100px;
+			text-decoration: none;
+			text-align: center;
+			text-shadow: 1px 1px 0px #528ecc;
+			margin: 5px;
+
+			&:hover {
+				background: -webkit-gradient(linear, left top, left bottom, color-stop(0.05, #80b5ea), color-stop(1, #bddbfa));
+				background: -moz-linear-gradient(center top, #80b5ea 5%, #bddbfa 100%);
+				filter: progid: DXImageTransform.Microsoft.gradient(startColorstr='#80b5ea', endColorstr='#bddbfa');
+				background-color: #80b5ea;
+			}
+
+			&:active {
+				position: relative;
+				top: 1px;
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<div id="board_container" class="board_container">
+		<canvas id="Board" class="Board" width="469" height="650"></canvas>
+		<div id="ctrl_panel" class="ctrl_panel">
+			<div style="margin: 150px 0 0 0 ">
+				<div>
+					<div style="color:orange;font-weight: bold; font-size: 150%;">Time Limit</div>
+					<input type="number" name="timer" id="timer" min="0" max="120" value="60"
+						style="width: 70px; height: 35px;font-size:24px;" />
+				</div>
+				<a href="#" class="button" id="start_button">START</a>
+				<a href="#" class="button" id="stop_button" style="visibility:hidden">STOP</a>
+				<div>
+					<input type="checkbox" name="debug" id="debug" value="debug">
+					<spin style="color:orange">Debug</spin>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="./bootstrap.js"></script>
+</body>
+
+</html>

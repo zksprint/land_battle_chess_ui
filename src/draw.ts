@@ -45,6 +45,12 @@ export function drawChess( txt: string, x: number, y: number, color: string, txt
 
 let dash_count = 0;
 let loop_count = 0;
+
+export function initDraw(){
+	dash_count = 0
+	loop_count = 0
+}
+
 export function draw( ctx:CanvasRenderingContext2D ) {
 	ctx.clearRect( 0, 0, canvas.width, canvas.height );
 

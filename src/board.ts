@@ -181,7 +181,7 @@ export class Board {
   GetMovableLocation(oriLocation: Location) {
     let queue:any = [];
     let visited:any = [];
-    let movable = [];
+    let movable:Location[] = [];
     if (oriLocation.getChess()?.rank == 9 || oriLocation.locationType == LocationType.Headquarters) {
       return [];
     }
@@ -189,7 +189,7 @@ export class Board {
     visited.push(oriLocation);
     oriLocation.edges.forEach((location) => queue.push(location));
     while (queue.length > 0) {
-      let targetLocation = queue.shift();
+      let targetLocation:Location = queue.shift();
       visited.push(targetLocation);
       let [movable1, movable2] = is_movable(oriLocation, targetLocation);
       if (movable1) {
