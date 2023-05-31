@@ -1,3 +1,4 @@
+import { Account } from "@aleohq/sdk";
 import { Chess, ChessStatus, Rank } from "./chess";
 import { Location, LocationType } from "./location";
 
@@ -6,13 +7,13 @@ export class Board {
   locations: Location[] = []
   private rowCnt: number = 12
   private columnCnt: number = 5
-  private player: number;
+  private account:Account;
 
   initChessList() {
     var chess_array = [0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 11];
     chess_array.forEach((rank: number) => {
-      this.chessList.push(new Chess(rank, 0));
-      this.chessList.push(new Chess(rank, 1));
+      this.chessList.push(new Chess(rank, "0"));
+      this.chessList.push(new Chess(rank, "1"));
     });
   }
 
@@ -58,8 +59,8 @@ export class Board {
   }
 
   // After Field Marshal died, the flag will be reveal 
-  RevealFlag(player: number) {
-    this.GetChessList(player,false).forEach((chess) => {
+  RevealFlag(address: string) {
+    this.GetChessList(address,false).forEach((chess) => {
       if (chess.rank == Rank.Flag) {
         chess.displayed = true;
       }
@@ -68,11 +69,11 @@ export class Board {
 
   destroy_chess(chess: Chess) {
     if (chess.rank == Rank.Flag) {
-      GameOver(chess.player);	
+      GameOver(chess.address);	
     }
     //RevealFlag when Field Marshal is destroyed
     if (chess.rank == 0) {
-      this.RevealFlag(chess.player);
+      this.RevealFlag(chess.address);
     }
     chess.chessStatus = ChessStatus.Captured;
   }
@@ -92,10 +93,10 @@ export class Board {
   // Return a list of chess for that player.
   // All the chess belongs to the player will be returned,
   // no matter died or alive.
-  GetChessList(player: number,OnBoard:boolean=false ): Chess[] {
+  GetChessList(address: string,OnBoard:boolean=false ): Chess[] {
     let chessList:Chess[] = [];
     for(const chess of this.chessList){
-      if(chess.player != player){
+      if(chess.address != address){
         continue;
       }
       if(OnBoard){
@@ -236,27 +237,27 @@ export class Board {
       return 0
     }
 
-    //if target location have enemy chess
-    let [alive0, alive1] = chess.compareRank(targetChess);
-    if (!alive0) {
-      this.destroy_chess(chess);
-    }
-    if (!alive1) {
-      this.destroy_chess(targetChess);
-    }
-    //chess1 alive and chess2 dead
-    if (alive0 && !alive1) {
-      targetLocation.setChess(chess);
-    }
-    //chess1 dead and chess2 alive
-    if (!alive0 && alive1) {
-      targetLocation.setChess(targetChess);
-    }
-    //both dead
-    if (!alive0 && !alive1) {
-      oriLocation!.removeChess();
-      targetLocation.removeChess();
-    }
+    // //if target location have enemy chess
+    // let [alive0, alive1] = chess.compareRank(targetChess);
+    // if (!alive0) {
+    //   this.destroy_chess(chess);
+    // }
+    // if (!alive1) {
+    //   this.destroy_chess(targetChess);
+    // }
+    // //chess1 alive and chess2 dead
+    // if (alive0 && !alive1) {
+    //   targetLocation.setChess(chess);
+    // }
+    // //chess1 dead and chess2 alive
+    // if (!alive0 && alive1) {
+    //   targetLocation.setChess(targetChess);
+    // }
+    // //both dead
+    // if (!alive0 && !alive1) {
+    //   oriLocation!.removeChess();
+    //   targetLocation.removeChess();
+    // }
 
     return 0
   }
@@ -302,8 +303,8 @@ export class Board {
     }
   }
 
-  constructor(player: number) {
-    this.player = player;
+  constructor(account: Account =undefined) {
+    this.account = account;
     for (let y = 0; y < this.rowCnt; y++) {
       this.setLocationType(y)
     }
@@ -319,11 +320,11 @@ export class Board {
 
 function is_movable(oriLocation: Location, targetLocation: Location) {
   let enemyChess = -1;	//no ches
-  if (targetLocation.getChess() && targetLocation.getChess()!.player != oriLocation.getChess()!.player) {
+  if (targetLocation.getChess() && targetLocation.getChess()!.address != oriLocation.getChess()!.address) {
     enemyChess = 1;	//enemy chess
   }
   //我方棋子
-  if (targetLocation.getChess() && targetLocation.getChess()!.player == oriLocation.getChess()!.player) {
+  if (targetLocation.getChess() && targetLocation.getChess()!.address == oriLocation.getChess()!.address) {
     enemyChess = 0;	//our chess
   }
 
@@ -399,6 +400,6 @@ function is_movable(oriLocation: Location, targetLocation: Location) {
 
 }
 
-function GameOver(player:number){
-	alert("Player"+player+"Won!");
+function GameOver(address:string){
+	alert("Player"+address+"Won!");
 }

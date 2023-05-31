@@ -7,6 +7,56 @@
 	<title>Land Battle Chess</title>
 	<!-- <link rel="stylesheet" type="text/css" href="main.css"> -->
 	<style>
+    .login-container {
+      max-width: 400px;
+      margin: 0 auto;
+			margin-top: 100px;
+      padding: 20px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+      box-sizing: border-box; /* 添加此样式 */
+    }
+
+    .form-group button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .form-group button:hover {
+      background-color: #45a049;
+    }
+
 		.Board {
 			background: url("./images/board.jpg");
 			background-repeat: no-repeat;
@@ -29,7 +79,7 @@
 		}
 
 		body {
-			background: url("./images/BackDrop.png");
+			background: url("./images/BackDrop.webp");
 		}
 
 		.ctrl_panel {
@@ -39,6 +89,31 @@
 			float: right;
 			text-align: center;
 		}
+
+		.loading {
+			width: 30px;
+			height: 30px;
+			border: 4px solid #f3f3f3;
+			border-top: 4px solid #3498db;
+			border-radius: 50%;
+			animation: spin 1s linear infinite;
+			position: absolute;
+			top: 30%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			z-index: 9999;
+			display: none;
+		}
+
+		@keyframes spin {
+			0% {
+				transform: translate(-50%, -50%) rotate(0deg);
+			}
+			100% {
+				transform: translate(-50%, -50%) rotate(360deg);
+			}
+		}
+
 
 		.button {
 			display: inline-block;
@@ -93,15 +168,34 @@
 </head>
 
 <body>
-	<div id="board_container" class="board_container">
+	<div class="login-container"  id="login-container">
+    <h2>进入游戏</h2>
+    <div class="form-group">
+      <label for="room_code">房间码</label>
+      <input type="text" id="room_code" placeholder="请输入房间码">
+    </div>
+		<div id="loading" class="loading"></div>
+    <div class="form-group">
+      <label for="private_key">私钥</label>
+      <input type="password" id="private_key" placeholder="请输入私钥">
+    </div>
+    <div class="form-group">
+      <button id="login_button">登录</button>
+    </div>
+
+  </div>
+
+	<div id="board_container" class="board_container" style="display: none;" >
 		<canvas id="Board" class="Board" width="469" height="650"></canvas>
 		<div id="ctrl_panel" class="ctrl_panel">
 			<div style="margin: 150px 0 0 0 ">
+				<div id="waiting_message" style="color: orange; font-weight: bold; font-size: 150%;">等待对方准备</div>
 				<div>
 					<div style="color:orange;font-weight: bold; font-size: 150%;">Time Limit</div>
 					<input type="number" name="timer" id="timer" min="0" max="120" value="60"
 						style="width: 70px; height: 35px;font-size:24px;" />
 				</div>
+
 				<a href="#" class="button" id="start_button">START</a>
 				<a href="#" class="button" id="stop_button" style="visibility:hidden">STOP</a>
 				<div>

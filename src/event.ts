@@ -10,12 +10,12 @@ export let selected_chess_movable: any = [];
 export let current_game_player = 0;
 
 export function initEventsValue() {
-   mouse_down = false;
-   mouse_start_pos = undefined;
-   mouse_current_pos = undefined;
-   selected_chess = undefined;
-   selected_chess_movable = [];
-   current_game_player = 0;
+  mouse_down = false;
+  mouse_start_pos = undefined;
+  mouse_current_pos = undefined;
+  selected_chess = undefined;
+  selected_chess_movable = [];
+  current_game_player = 0;
 }
 
 //鼠标点击事件
@@ -23,6 +23,8 @@ export function canvasDown(e: MouseEvent): void {
   mouse_down = true;
   mouse_start_pos = { x: e.offsetX, y: e.offsetY };
   mouse_current_pos = { x: e.offsetX, y: e.offsetY };
+
+
   const coords = getRectObj(mouse_start_pos);
   if (!coords) {
     console.log("coords is undefined", coords);
@@ -38,29 +40,38 @@ export function canvasDown(e: MouseEvent): void {
   if (!chess) {
     return
   }
+  // 创建 Audio 元素
+  const audio = new Audio("../images/mouseClick.mp3");
 
-  if (chess.player != current_player || current_game_player != current_player) {
-    console.log("player is not right chessPlay:", chess.player, "currentGamePlay:", current_game_player, "curPlayer:", current_player)
-    return;
-  }
+  // 监听音频文件加载完成事件
+  audio.addEventListener("canplaythrough", () => {
+    // 播放音频
+    audio.play();
+    if (chess.address != current_player) {
+      console.log("player is not right chessPlay:", chess.address)
+      return;
+    }
 
-  selected_chess = coords;
-  selected_chess_movable = [];
-  let curLocation = board.getLocationInstance(logic_coords.x, logic_coords.y)!
+    selected_chess = coords;
+    selected_chess_movable = [];
+    let curLocation = board.getLocationInstance(logic_coords.x, logic_coords.y)!
 
-  if (game_started == true) {
-    let movable_location = board.GetMovableLocation(curLocation);
-    movable_location!.forEach(
-      (i) => selected_chess_movable.push(getDrawPos(i.x, i.y)));
-  }else{
-    let movable_location = board.GetPlaceableLocation(curLocation);
-    console.log('canvas_down game is not start', movable_location)
-    for (const location of movable_location) {
-      if (board.GetPlaceableLocation(location).indexOf(curLocation) > -1) {
-        selected_chess_movable.push(getDrawPos(location.x, location.y));
+    if (game_started == true) {
+      let movable_location = board.GetMovableLocation(curLocation);
+      movable_location!.forEach(
+        (i) => selected_chess_movable.push(getDrawPos(i.x, i.y)));
+    } else {
+      let movable_location = board.GetPlaceableLocation(curLocation);
+      console.log('canvas_down game is not start', movable_location)
+      for (const location of movable_location) {
+        if (board.GetPlaceableLocation(location).indexOf(curLocation) > -1) {
+          selected_chess_movable.push(getDrawPos(location.x, location.y));
+        }
       }
     }
-  }
+  });
+
+
 }
 
 export function setCurrentGamePlayer(value: number): void {
@@ -82,7 +93,7 @@ export function canvasUp(e: MouseEvent) {
     const targetPos = getDrawPosIndex(rect_obj)!;
     const oriLocation = board.getLocationInstance(oriPos.x, oriPos.y);
     const chess = oriLocation.getChess()!;
-    if (chess.player != current_player) {
+    if (chess.address != current_player) {
       return;
     }
 
@@ -95,7 +106,7 @@ export function canvasUp(e: MouseEvent) {
 
     if (board.Move(chess, targetLocation) != -1) {
       timerNextPlayer();
-      setCurrentGamePlayer(1 - current_player)
+      // setCurrentGamePlayer(1 - current_player)
       setTimeout(AI_Move, Math.floor((Math.random() * 2000) + 1000));
     }
     selected_chess = null
