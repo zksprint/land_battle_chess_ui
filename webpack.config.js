@@ -28,10 +28,12 @@ module.exports = {
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
   },
+  devServer: {
+    port: 8080,
+  },
   plugins: [
     new CopyWebpackPlugin({
       patterns: [{ from: "./index.html", to: "./" }, { from: "./images", to: "./images" },],
-      
     }),
   ],
 };

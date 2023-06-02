@@ -29,6 +29,21 @@ export async function getGameId(address:string,accessCode:string): Promise<numbe
     }
   } catch (error) {
     console.error('Error:', error);
+    return 0
+  }
+}
+
+export async function pollGetGameId(address:string): Promise<number> {
+  try {
+    // GET 请求带参数
+    const url = `/join/${address}`
+    const response = await api.get(url);
+    if(response.status == 200){
+      return response.data.JoinResult.game_id as number
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    return 0
   }
 }
 

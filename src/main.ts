@@ -3,8 +3,9 @@ import { Board } from "./board";
 import { Chess, ChessStatus, Rank_zhHK,  } from "./chess";
 import { drawChess, resetChess } from "./draw";
 import { setCurrentGamePlayer } from "./event";
-import { all_init, current_player} from "./init";
+import { drawBoardInit, current_player} from "./init";
 import { Account } from '@aleohq/sdk'
+import { board } from "./login";
 
 init().then(wasm=>{
   console.log("wasm is ....")
@@ -16,7 +17,6 @@ init().then(wasm=>{
   )
   console.log('RecordCiphertext:', JSON.stringify(record))
 })
-
 
 
 export const CHESS_WIDTH = 60;
@@ -122,13 +122,7 @@ export function updateDrawArray() {
 	} );
 }
 
-export function resetBoard(){
-  board = new Board()
-}
 
-export let board:Board ;
-
-all_init()
 // testAsm()
 
 // async function testAsm(){

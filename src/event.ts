@@ -1,6 +1,7 @@
 import { getDrawPos, getDrawPosIndex, getRectObj } from './draw';
 import { current_player } from './init';
-import { AI_Move, board, game_started, timerNextPlayer, updateDrawArray } from './main';
+import { board } from './login';
+import { AI_Move,  game_started, timerNextPlayer, updateDrawArray } from './main';
 
 export let mouse_down = false;
 export let mouse_start_pos: any;
@@ -120,3 +121,4 @@ export function canvasMousemove(e: MouseEvent) {
     mouse_current_pos = { x: e.offsetX, y: e.offsetY };
   }
 }
+

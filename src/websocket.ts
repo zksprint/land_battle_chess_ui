@@ -1,31 +1,61 @@
-// 定义 WebSocket 连接
-const socket = new WebSocket('ws://localhost:3000');
+type MessageCallback = (message: string) => void;
 
-// 监听 WebSocket 连接建立事件
-socket.onopen = () => {
-  console.log('WebSocket connection established');
-};
+export class WebSocketClient {
+  private socket: WebSocket | null = null;
+  private messageCallback: MessageCallback | null = null;
 
-// 监听 WebSocket 接收消息事件
-socket.onmessage = event => {
-  const message = event.data;
-  console.log('Received message from server:', message);
+  constructor(private url: string) {}
 
-  // 在这里处理从后端接收到的消息
-  // 可以根据消息内容执行相应的操作
-};
+  connect(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.socket = new WebSocket(this.url);
+      this.socket.onopen = () => {
+        console.log('WebSocket connection established');
+        resolve();
+      };
+      this.socket.onclose = this.onClose.bind(this);
+      this.socket.onmessage = this.onMessage.bind(this);
+      this.socket.onerror = this.onError.bind(this);
+    });
+  }
 
-// 监听 WebSocket 连接关闭事件
-socket.onclose = () => {
-  console.log('WebSocket connection closed');
-};
+  private onClose(event: CloseEvent): void {
+    console.log('WebSocket connection closed');
+  }
 
-// 发送消息到后端
-function sendMessage(message: string): void {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(message);
-    console.log('Sent message to server:', message);
-  } else {
-    console.log('WebSocket connection is not open');
+  private onMessage(event: MessageEvent): void {
+    const message = event.data;
+    console.log('Received message:', message);
+    if (this.messageCallback) {
+      this.messageCallback(message);
+    }
+  }
+
+  private onError(event: Event): void {
+    console.error('WebSocket error:', event);
+  }
+
+  sendAsync(message: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+        this.socket.send(message);
+        resolve();
+      } else {
+        this.setMessageCallback(() => {
+          this.socket?.send(message);
+          resolve();
+        });
+      }
+    });
+  }
+
+  close(): void {
+    if (this.socket) {
+      this.socket.close();
+    }
+  }
+
+  setMessageCallback(callback: MessageCallback): void {
+    this.messageCallback = callback;
   }
 }

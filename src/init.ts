@@ -1,8 +1,8 @@
 import { Chess, ChessStatus } from "./chess";
 import { draw, initDraw, resetChess } from "./draw";
 import { canvasDown, canvasMousemove, canvasUp, initEventsValue } from "./event";
-import { LoginHandler } from "./login";
-import { GameStart, GameStop, board, myTimer, resetBoard, updateDrawArray } from "./main";
+import { LoginHandler, board } from "./login";
+import { GameStart, GameStop,  myTimer, updateDrawArray } from "./main";
 
 export let draw_pos: any = [];
 
@@ -34,15 +34,6 @@ export function init(): void {
 			offset += 48;
 		}
 	});
-
-	const startButton = document.getElementById("start_button") as HTMLButtonElement;
-	startButton.addEventListener("click", GameStart);
-	const stopButton = document.getElementById("stop_button") as HTMLButtonElement;
-	stopButton.addEventListener("click", GameStop);
-	setInterval(myTimer, 1000);
-
-	const login = document.getElementById("login_button") as HTMLButtonElement;
-	login.addEventListener("click", LoginHandler);
 }
 
 
@@ -121,23 +112,36 @@ export function default_position(set: number) {
 
 export let canvas: HTMLCanvasElement;
 export let ctx: CanvasRenderingContext2D;
-export function all_init() {
-	resetChess();
-	init();
-	initDraw()
-	initEventsValue()
-	resetBoard()
+
+export function  eventInit(){
 	canvas = document.getElementById("Board") as HTMLCanvasElement;
 	ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-	default_position(1);
 	canvas.addEventListener('mousedown', canvasDown);
 	canvas.addEventListener('mouseup', canvasUp);
 	canvas.addEventListener('mouseleave', canvasUp);
 	canvas.addEventListener('mousemove', canvasMousemove);
+
+	const startButton = document.getElementById("start_button") as HTMLButtonElement;
+	startButton.addEventListener("click", GameStart);
+	const stopButton = document.getElementById("stop_button") as HTMLButtonElement;
+	stopButton.addEventListener("click", GameStop);
+	setInterval(myTimer, 1000);
+
+	const login = document.getElementById("login_button") as HTMLButtonElement;
+	login.addEventListener("click", LoginHandler);
+}
+
+export function drawBoardInit() {
+	resetChess();
+	init();
+	initDraw()
+	default_position(1);
+	initEventsValue()
 	setInterval(() => { draw(ctx); });
 	updateDrawArray();
 	draw(ctx);
 }
+
 
 export function isChessVisible(chess: Chess): boolean {
 	if (chess.displayed == true)
@@ -148,3 +152,4 @@ export function isChessVisible(chess: Chess): boolean {
 		return false;
 }
 
+eventInit()

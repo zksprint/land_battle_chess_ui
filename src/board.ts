@@ -303,7 +303,7 @@ export class Board {
     }
   }
 
-  constructor(account: Account =undefined) {
+  constructor(account: Account) {
     this.account = account;
     for (let y = 0; y < this.rowCnt; y++) {
       this.setLocationType(y)
