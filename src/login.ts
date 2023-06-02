@@ -12,7 +12,7 @@ function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function getGameIdFromServer(): Promise<number> {
+async function getGameIdFromServer(): Promise<string> {
   // 获取房间码和私钥的输入框元素
   const roomCodeInput = document.getElementById("room_code") as HTMLInputElement;
   const privateKeyInput = document.getElementById("private_key") as HTMLInputElement;
@@ -26,16 +26,16 @@ async function getGameIdFromServer(): Promise<number> {
   account = new Account({privateKey:privateKey})
   console.log('account address:', account.toString())
 
-  let gameId = 0
+  let gameId = "0"
   gameId = await getGameId(account.toString(), roomCode)
-  if (gameId != 0) {
+  if (gameId != "") {
     loading.style.display = "none";
     return gameId
   }
 
   for (let i = 0, tryCnt = 20; i < tryCnt; i++) {
     gameId = await pollGetGameId(account.toString())
-    if (gameId != 0) {
+    if (gameId != "") {
       break
     }
     await sleep(2000)
@@ -46,7 +46,7 @@ async function getGameIdFromServer(): Promise<number> {
   return gameId
 }
 
-async function connectWs(gameId: number,address:string) {
+async function connectWs(gameId: string,address:string) {
   // 使用示例
   ws = new WebSocketClient(`ws://127.0.0.1:3000/game?game_id=${gameId}&player=${address}`);
   await ws.connect();
@@ -78,7 +78,7 @@ function changeDisplay() {
 
 export async function LoginHandler() {
   const gameId = await getGameIdFromServer()
-  if (gameId == 0) {
+  if (gameId == "") {
     alert("未到匹配的玩家，等稍后重试!")
     return
   }

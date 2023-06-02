@@ -19,31 +19,33 @@ if (proxyExists) {
   };
 }
 
-export async function getGameId(address:string,accessCode:string): Promise<number> {
+export async function getGameId(address:string,accessCode:string): Promise<string> {
   try {
     // GET 请求带参数
     const params = { pubkey: address, access_code: accessCode };
     const response = await api.get("/join",{params:params});
     if(response.status == 200){
-      return response.data.JoinResult.game_id as number
+      console.log("getGameId:",response.data.JoinResult.game_id)
+      return response.data.JoinResult.game_id
     }
   } catch (error) {
     console.error('Error:', error);
-    return 0
+    return ""
   }
 }
 
-export async function pollGetGameId(address:string): Promise<number> {
+export async function pollGetGameId(address:string): Promise<string> {
   try {
     // GET 请求带参数
     const url = `/join/${address}`
     const response = await api.get(url);
     if(response.status == 200){
-      return response.data.JoinResult.game_id as number
+      console.log("pollGetGameId:",response.data.JoinResult.game_id)
+      return response.data.JoinResult.game_id 
     }
   } catch (error) {
     console.error('Error:', error);
-    return 0
+    return ""
   }
 }
 
