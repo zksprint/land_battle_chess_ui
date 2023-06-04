@@ -9,11 +9,11 @@ export class Board {
   private columnCnt: number = 5
   private account:Account;
 
-  initChessList() {
+  initChessList(address:string,oppAddress:string) {
     var chess_array = [0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 11];
     chess_array.forEach((rank: number) => {
-      this.chessList.push(new Chess(rank, "0"));
-      this.chessList.push(new Chess(rank, "1"));
+      this.chessList.push(new Chess(rank, address));
+      this.chessList.push(new Chess(rank, oppAddress));
     });
   }
 
@@ -303,13 +303,13 @@ export class Board {
     }
   }
 
-  constructor(account: Account) {
+  constructor(account: Account,oppAddress: string) {
     this.account = account;
     for (let y = 0; y < this.rowCnt; y++) {
       this.setLocationType(y)
     }
     // init chess rank
-    this.initChessList()
+    this.initChessList(account.toString(),oppAddress)
     //init edge location
     this.initLocationEdges()
 

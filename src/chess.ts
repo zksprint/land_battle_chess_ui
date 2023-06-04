@@ -5,17 +5,17 @@ import {Address } from "@aleohq/wasm";
 
 export const Rank_zhHK = [
 	"司令",//0
-	"軍長",//1
-	"師長",//2
-	"旅長",//3
-	"團長",//4
-	"營長",//5
-	"連長",//6
-	"排長",//7
+	"军长",//1
+	"师长",//2
+	"旅长",//3
+	"团长",//4
+	"营长",//5
+	"连长",//6
+	"排长",//7
 	"工兵",//8
 	"地雷",//9
-	"炸彈",//10
-	"軍旗" //11
+	"炸弹",//10
+	"军旗" //11
 ];
 
 
@@ -47,7 +47,7 @@ export class Chess {
   displayed:boolean; //是否显示
   chessStatus:ChessStatus; 
 
-	constructor(rank:Rank, address?:string) {
+	constructor(rank:Rank, address:string) {
 		this.rank = rank;
 		this.chessStatus = ChessStatus.OnBoard;
 		this.displayed = false;

@@ -1,7 +1,7 @@
 import { Chess, ChessStatus } from "./chess";
 import { draw, initDraw, resetChess } from "./draw";
-import { canvasDown, canvasMousemove, canvasUp, initEventsValue } from "./event";
-import { LoginHandler, board } from "./login";
+import { board, canvasDown, canvasMousemove, canvasUp, initEventsValue } from "./event";
+import { LoginHandler } from "./login";
 import { GameStart, GameStop,  myTimer, updateDrawArray } from "./main";
 
 export let draw_pos: any = [];
@@ -38,9 +38,9 @@ export function init(): void {
 
 
 
-export function default_position(set: number) {
-	if (set == 1) {
-		let p1 = board.GetChessList("0", false);
+export function setDefaultPosition(address:string,oppAddress:string) {
+
+		let p1 = board.GetChessList(address, false);
 		//1
 		board.getLocationInstance(0, 6).setChess(p1[0]);
 		board.getLocationInstance(1, 6).setChess(p1[1]);
@@ -73,7 +73,7 @@ export function default_position(set: number) {
 		board.getLocationInstance(3, 11).setChess(p1[24]);
 		board.getLocationInstance(4, 11).setChess(p1[23]);
 
-		p1 = board.GetChessList("1");
+		p1 = board.GetChessList(oppAddress);
 		board.getLocationInstance(0, 5).setChess(p1[0]);
 		board.getLocationInstance(1, 5).setChess(p1[1]);
 		board.getLocationInstance(2, 5).setChess(p1[2]);
@@ -105,8 +105,6 @@ export function default_position(set: number) {
 		board.getLocationInstance(3, 0).setChess(p1[24]);
 		board.getLocationInstance(4, 0).setChess(p1[23]);
 
-
-	}
 }
 
 
@@ -131,11 +129,11 @@ export function  eventInit(){
 	login.addEventListener("click", LoginHandler);
 }
 
-export function drawBoardInit() {
+export function drawBoardInit(address:string,oppAddress:string) {
 	resetChess();
 	init();
 	initDraw()
-	default_position(1);
+	setDefaultPosition(address,oppAddress);
 	initEventsValue()
 	setInterval(() => { draw(ctx); });
 	updateDrawArray();

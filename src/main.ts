@@ -2,10 +2,12 @@ import init,{ RecordCiphertext } from "@aleohq/wasm";
 import { Board } from "./board";
 import { Chess, ChessStatus, Rank_zhHK,  } from "./chess";
 import { drawChess, resetChess } from "./draw";
-import { setCurrentGamePlayer } from "./event";
-import { drawBoardInit, current_player} from "./init";
+import { board, setCurrentGamePlayer } from "./event";
+import {  current_player} from "./init";
 import { Account } from '@aleohq/sdk'
-import { board } from "./login";
+import { Game } from "./game";
+import { account, gameId } from "./login";
+import { getGameId } from "./api";
 
 init().then(wasm=>{
   console.log("wasm is ....")
@@ -21,7 +23,7 @@ init().then(wasm=>{
 
 export const CHESS_WIDTH = 60;
 export const CHESS_HEIGHT = 33;
-export const player_color = ["blue","read"]
+export const player_color = ["red","blue"]
 
 //timer
 export let timer_value = 0;
@@ -104,7 +106,7 @@ function isChessVisible( chess:Chess):boolean {
 		return true;
   }
 
-	if ( chess.address == current_player ){
+	if ( chess.address == account.toString() ){
 		return true;
   }
 
@@ -113,13 +115,27 @@ function isChessVisible( chess:Chess):boolean {
 
 export function updateDrawArray() {
 	resetChess();
-	board.locations.forEach( ( i ) => {
-		let chess = i.getChess();
-		if ( chess && chess != null && chess.chessStatus == ChessStatus.OnBoard ) {
-			let visible = isChessVisible( chess );
-			drawChess(Rank_zhHK[chess.rank], i.x, i.y, player_color[0], visible );
-		}
-	} );
+
+  for(const location of board.locations){
+    const chess = location.getChess();
+    if(chess && chess.chessStatus == ChessStatus.OnBoard ){
+      let visible = isChessVisible( chess );
+      if(chess.address == Game.getInstance(gameId).getPlayer1()){
+        drawChess(Rank_zhHK[chess.rank], location.x, location.y,player_color[0], visible );
+      }else{
+        drawChess(Rank_zhHK[chess.rank], location.x, location.y,player_color[1], visible );
+      }
+
+    }
+  }
+
+	// board.locations.forEach( ( i: { getChess: () => any; x: number; y: number; } ) => {
+	// 	let chess = i.getChess();
+	// 	if ( chess && chess != null && chess.chessStatus == ChessStatus.OnBoard ) {
+	// 		let visible = isChessVisible( chess );
+	// 		drawChess(Rank_zhHK[chess.rank], i.x, i.y, player1? player_color[0]:player_color[1], visible );
+	// 	}
+	// } );
 }
 
 

@@ -1,7 +1,10 @@
+import { Account } from '@aleohq/sdk';
 import { getDrawPos, getDrawPosIndex, getRectObj } from './draw';
-import { current_player } from './init';
-import { board } from './login';
+import { current_player, drawBoardInit } from './init';
+import { account, changeDisplay } from './login';
 import { AI_Move,  game_started, timerNextPlayer, updateDrawArray } from './main';
+import { Board } from './board';
+import { Game } from './game';
 
 export let mouse_down = false;
 export let mouse_start_pos: any;
@@ -108,7 +111,8 @@ export function canvasUp(e: MouseEvent) {
     if (board.Move(chess, targetLocation) != -1) {
       timerNextPlayer();
       // setCurrentGamePlayer(1 - current_player)
-      setTimeout(AI_Move, Math.floor((Math.random() * 2000) + 1000));
+      //通知对方行走
+      // setTimeout(AI_Move, Math.floor((Math.random() * 2000) + 1000));
     }
     selected_chess = null
     selected_chess_movable = [];
@@ -122,3 +126,19 @@ export function canvasMousemove(e: MouseEvent) {
   }
 }
 
+export let board:Board ;
+
+//处理ws通知对手匹配完成事件
+export function handleRole(data: any) {
+  let game = Game.getInstance(data.game_id)
+  if(game != undefined){
+    console.log("handleRole game exist id:",data.game_id)
+    return
+  }
+
+  const oppAddress = data.player1 == account.toString()? data.player2:data.player1
+  Game.createInstance(data.game_id, data.player1, data.player2,account)
+  board = new Board(account,oppAddress)
+  drawBoardInit(account.toString(),oppAddress)
+  changeDisplay()
+}

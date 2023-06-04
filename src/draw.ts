@@ -114,13 +114,17 @@ export function draw( ctx:CanvasRenderingContext2D ) {
 
 	//text
 	ctx.font = '20px arial';
-	ctx.fillStyle = 'blue';
+	// ctx.fillStyle = 'blue';
 	ctx.textAlign = "left";
 	draw_array.forEach( ( i ) => {
     const debugCheckbox = document.getElementById("debug") as HTMLInputElement;
     if (!debugCheckbox.checked && !i.txt_visible) {
       return;
     }
+
+		if(i.txt_visible){
+			ctx.fillStyle = i.color
+		}
 
 		if ( getDrawPos( i.x, i.y ) == selected_chess && mouse_down ) {
 			let ori_x = getDrawPos( i.x, i.y ).x;

@@ -1,12 +1,10 @@
 import { Account } from "@aleohq/sdk";
 import { getGameId, pollGetGameId } from "./api";
-import { WebSocketClient } from "./websocket";
-import { Board } from "./board";
-import { drawBoardInit } from "./init";
+import { WebSocketClient, handleWsServerMsg } from "./websocket";
 
 export let ws: WebSocketClient
-export let board:Board ;
-let account :Account
+export let account :Account
+export let gameId :string = "0"
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -26,16 +24,15 @@ async function getGameIdFromServer(): Promise<string> {
   account = new Account({privateKey:privateKey})
   console.log('account address:', account.toString())
 
-  let gameId = "0"
   gameId = await getGameId(account.toString(), roomCode)
-  if (gameId != "") {
+  if (gameId != "0") {
     loading.style.display = "none";
     return gameId
   }
 
   for (let i = 0, tryCnt = 20; i < tryCnt; i++) {
     gameId = await pollGetGameId(account.toString())
-    if (gameId != "") {
+    if (gameId != "0") {
       break
     }
     await sleep(2000)
@@ -49,14 +46,15 @@ async function getGameIdFromServer(): Promise<string> {
 async function connectWs(gameId: string,address:string) {
   // 使用示例
   ws = new WebSocketClient(`ws://127.0.0.1:3000/game?game_id=${gameId}&player=${address}`);
+  ws.setMessageCallback(handleWsServerMsg)
   await ws.connect();
   console.log("connect ws:",JSON.stringify(ws))
 
-  // 设置消息回调函数
-  ws.setMessageCallback((message) => {
-    console.log('Received message from server:', message);
-    // 在这里处理来自后台的消息
-  });
+  // // 设置消息回调函数
+  // ws.setMessageCallback((message) => {
+  //   console.log('Received message from server:', message);
+  //   // 在这里处理来自后台的消息
+  // });
 
   await ws.sendAsync(JSON.stringify({}))
 
@@ -67,7 +65,7 @@ async function connectWs(gameId: string,address:string) {
   // ws.close();
 }
 
-function changeDisplay() {
+export function changeDisplay() {
   // 隐藏登录框
   const loginContainer = document.getElementById('login-container') as HTMLElement;
   loginContainer.style.display = 'none';
@@ -78,13 +76,9 @@ function changeDisplay() {
 
 export async function LoginHandler() {
   const gameId = await getGameIdFromServer()
-  if (gameId == "") {
+  if (gameId == "0") {
     alert("未到匹配的玩家，等稍后重试!")
     return
   }
-
   await connectWs(gameId,account.toString())
-  board = new Board(account)
-  drawBoardInit()
-  changeDisplay()
 }

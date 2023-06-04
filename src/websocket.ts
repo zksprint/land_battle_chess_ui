@@ -1,3 +1,5 @@
+import { handleRole } from "./event";
+
 type MessageCallback = (message: string) => void;
 
 export class WebSocketClient {
@@ -16,6 +18,7 @@ export class WebSocketClient {
       this.socket.onclose = this.onClose.bind(this);
       this.socket.onmessage = this.onMessage.bind(this);
       this.socket.onerror = this.onError.bind(this);
+      this.setMessageCallback(handleWsServerMsg)
     });
   }
 
@@ -58,4 +61,39 @@ export class WebSocketClient {
   setMessageCallback(callback: MessageCallback): void {
     this.messageCallback = callback;
   }
+}
+
+enum EMessageType {
+  ROLE = "role",
+  MOVE = "move"
+}
+
+export function handleWsServerMsg(message: string) {
+  const jsData = JSON.parse(message);
+  const handlers:any = {
+    [EMessageType.ROLE]: handleRole,
+    [EMessageType.MOVE]: handleMove,
+    // 添加其他消息类型的处理函数
+  };
+
+  const handler = handlers[jsData.type];
+  if (handler) {
+    handler(jsData);
+  } else {
+    console.log("Unknown message type:", jsData.type);
+  }
+}
+
+
+
+function handleMove(data: any) {
+  console.log(
+    "handle serverMsg move:",
+    data.x,
+    data.y,
+    data.target_x,
+    data.target_y,
+    data.piece,
+    data.pubkey
+  );
 }
