@@ -1,48 +1,52 @@
 //==============================================================================
 // Chess
 //==============================================================================
-import {Address } from "@aleohq/wasm";
+import { Game } from "./game";
+import { gameId } from "./login";
 
-export const Rank_zhHK = [
-	"司令",//0
-	"军长",//1
-	"师长",//2
-	"旅长",//3
-	"团长",//4
-	"营长",//5
-	"连长",//6
-	"排长",//7
-	"工兵",//8
-	"地雷",//9
-	"炸弹",//10
-	"军旗" //11
-];
-
+export const RANK_ZH = [
+  "空",
+  "军旗",
+  "炸弹",
+  "地雷",
+  "工兵",
+  "排长",
+  "连长",
+  "营长",
+  "团长",
+  "旅长",
+  "师长",
+  "军长",
+  "司令"
+]
 
 export enum Rank {
-  "Field Marshal",
-  "General",
-  "Lieutenant General",
-  "Brigadier",
-  "Colonel",
-  "Major",
-  "Captain",
-  "Platoon Commander",
-  "Engineer",
-  "Landmine",
-  "Grenade",
-  "Flag",
+  "Empty" = 0,
+  "Flag" = 1,
+  "Bomb" = 2,
+  "Landmine" = 3,
+  "Engineer" = 4,
+  "Lieutenant" = 5,
+  "Captain" = 6,
+  "Major" = 7,
+  "Colonel" = 8,
+  "Brigadier" = 9 ,
+  "MajorGeneral" = 10,
+  "General" = 11,
+  "FieldMarshal" = 12,
+  "Unchanged" = 13,
+  "Opponent" = 14,
 }
 
 //棋子状态
 export enum ChessStatus {
-  OnBoard,  //存活
-  Captured,  //dead
+  OnBoard = 1,  //存活
+  Captured = 2,  //dead
 }
 
 // Chess object representing a chess instance
 export class Chess {
-  rank: number;  //等级
+  rank: Rank;  //等级
   address:string;
   displayed:boolean; //是否显示
   chessStatus:ChessStatus; 
@@ -53,6 +57,10 @@ export class Chess {
 		this.displayed = false;
     this.address= address
 	}
+
+  isLocalChess(){
+    return this.address == Game.getInstance(gameId).getLocalAddresses()
+  }
 }
 
 

@@ -3,7 +3,13 @@ import { mouse_current_pos, mouse_down, mouse_start_pos, selected_chess, selecte
 import { canvas, draw_pos } from "./init";
 import { CHESS_HEIGHT, CHESS_WIDTH } from "./main";
 
-export let draw_array: { txt: string; x: number; y: number; color: string; txt_visible: boolean; }[]= [];
+export let draw_array: { txt: string; x: number; y: number; color: string; txt_visible: boolean; bgColor:string }[]= [];
+
+
+export function updateShowMessage(text:string) {
+	let waitingMessage = document.getElementById("showMessage");
+	waitingMessage.textContent = text
+}
 
 //根据xy坐标获取元素
 export function getDrawPos(x: number, y: number) {	//-> draw_pos[x]
@@ -39,8 +45,8 @@ export function resetChess() {
 	draw_array = [];
 }
 
-export function drawChess( txt: string, x: number, y: number, color: string, txt_visible: boolean ) {
-	draw_array.push( { txt: txt, x: x, y: y, color: color, txt_visible: txt_visible } );
+export function drawChess( txt: string, x: number, y: number, color: string, txt_visible: boolean,bgColor:string ) {
+	draw_array.push( { txt: txt, x: x, y: y, color: color, txt_visible: txt_visible, bgColor:bgColor } );
 }
 
 let dash_count = 0;
@@ -51,90 +57,123 @@ export function initDraw(){
 	loop_count = 0
 }
 
-export function draw( ctx:CanvasRenderingContext2D ) {
-	ctx.clearRect( 0, 0, canvas.width, canvas.height );
+/**
+ * 绘制函数
+ * @param ctx 画布上下文
+ */
+export function draw(ctx: CanvasRenderingContext2D) {
+  // 清除画布
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-	//rect
-	loop_count++;
-	if ( loop_count >= 300 ) {
-		loop_count = 0;
-	}
+  // 绘制矩形框
+  drawRectangles(ctx);
 
-	draw_array.forEach( ( i ) => {
-		ctx.save();
-		ctx.beginPath();
-		//draw border
-		ctx.lineWidth = 5;
-		ctx.beginPath();
-		if ( getDrawPos( i.x, i.y ) == selected_chess ){
-			ctx.strokeStyle = "orange";
-			if ( mouse_down == true ) {
-				let ori_x = getDrawPos( i.x, i.y ).x;
-				let ori_y = getDrawPos( i.x, i.y ).y;
-				ori_x = ori_x + ( mouse_current_pos.x - mouse_start_pos.x );
-				ori_y = ori_y + ( mouse_current_pos.y - mouse_start_pos.y );
-				ctx.rect( ori_x, ori_y, CHESS_WIDTH, CHESS_HEIGHT );
-			} else{
-        ctx.rect( getDrawPos( i.x, i.y ).x, getDrawPos( i.x, i.y ).y, CHESS_WIDTH, CHESS_HEIGHT );
+  // 绘制虚线框
+  drawDottedRectangles(ctx);
+
+  // 绘制文本
+  drawText(ctx);
+}
+
+/**
+ * 绘制虚线框
+ * @param ctx 画布上下文
+ */
+function drawDottedRectangles(ctx: CanvasRenderingContext2D) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.setLineDash([]);
+  ctx.lineDashOffset = dash_count;
+
+  selected_chess_movable.forEach((item: { x: number; y: number }) => {
+    ctx.lineWidth = 3;
+    const alpha = 1 * Math.abs(loop_count - 150) / 150;
+    ctx.strokeStyle = `rgba(0, 200, 0, ${alpha})`;
+    ctx.strokeRect(item.x, item.y, CHESS_WIDTH, CHESS_HEIGHT);
+  });
+
+  ctx.stroke();
+  ctx.closePath();
+  ctx.restore();
+}
+
+
+/**
+ * 绘制矩形框
+ * @param ctx 画布上下文
+ */
+function drawRectangles(ctx: CanvasRenderingContext2D) {
+  draw_array.forEach((item) => {
+    ctx.save();
+    ctx.beginPath();
+
+    const drawPos = getDrawPos(item.x, item.y);
+    const isSelectedChess = drawPos === selected_chess;
+
+    ctx.lineWidth = 2;
+
+    if (isSelectedChess) {
+      ctx.strokeStyle = "orange";
+      if (mouse_down) {
+        const offsetX = drawPos.x + (mouse_current_pos.x - mouse_start_pos.x);
+        const offsetY = drawPos.y + (mouse_current_pos.y - mouse_start_pos.y);
+        ctx.rect(offsetX, offsetY, CHESS_WIDTH, CHESS_HEIGHT);
+      } else {
+        ctx.rect(drawPos.x, drawPos.y, CHESS_WIDTH, CHESS_HEIGHT);
       }
+    } else {
+      ctx.setLineDash([]);
+      ctx.strokeStyle = item.color;
+      ctx.rect(drawPos.x, drawPos.y, CHESS_WIDTH, CHESS_HEIGHT);
+    }
 
-		} else {
-			ctx.setLineDash( [] );
-			ctx.strokeStyle = i.color;
-			ctx.rect( getDrawPos( i.x, i.y ).x, getDrawPos( i.x, i.y ).y, CHESS_WIDTH, CHESS_HEIGHT );
-		}
-		//rect
-		ctx.fill();
-		ctx.stroke();
+    ctx.fillStyle = isSelectedChess ? "lightblue" : item.bgColor;
+    ctx.fill();
+    ctx.stroke();
+    ctx.closePath();
+    ctx.restore();
+  });
+}
 
-		if ( getDrawPos( i.x, i.y ) == selected_chess )
-			ctx.fillStyle = 'lightblue';
-		else
-			ctx.fillStyle = '#fff';
-		ctx.fill();
+/**
+ * 绘制文本
+ * @param ctx 画布上下文
+ */
+function drawText(ctx: CanvasRenderingContext2D) {
+  ctx.font = '20px arial';
+  ctx.textAlign = "left";
 
-		ctx.closePath();
-		ctx.restore();
-	} );
-
-	//dotted
-	ctx.save();
-	ctx.beginPath();
-	//ctx.setLineDash([6,6]);
-	ctx.setLineDash( [] );
-	ctx.lineDashOffset = dash_count;
-	selected_chess_movable.forEach( ( i: { x: number; y: number; } ) => {
-		ctx.lineWidth = 5;
-		ctx.strokeStyle = "rgba(0,200,0," + 1 * Math.abs( loop_count - 150 ) / 150 + ")";
-		ctx.strokeRect( i.x, i.y, CHESS_WIDTH, CHESS_HEIGHT );
-	} );
-	ctx.stroke();
-	ctx.closePath();
-	ctx.restore();
-
-	//text
-	ctx.font = '20px arial';
-	// ctx.fillStyle = 'blue';
-	ctx.textAlign = "left";
-	draw_array.forEach( ( i ) => {
+  draw_array.forEach((item) => {
     const debugCheckbox = document.getElementById("debug") as HTMLInputElement;
-    if (!debugCheckbox.checked && !i.txt_visible) {
+    if (!debugCheckbox.checked && !item.txt_visible) {
       return;
     }
 
-		if(i.txt_visible){
-			ctx.fillStyle = i.color
-		}
+    ctx.save();
+    ctx.beginPath();
 
-		if ( getDrawPos( i.x, i.y ) == selected_chess && mouse_down ) {
-			let ori_x = getDrawPos( i.x, i.y ).x;
-			let ori_y = getDrawPos( i.x, i.y ).y;
-			ori_x = ori_x + ( mouse_current_pos.x - mouse_start_pos.x );
-			ori_y = ori_y + ( mouse_current_pos.y - mouse_start_pos.y );
-			ctx.rect( ori_x, ori_y, CHESS_WIDTH, CHESS_HEIGHT );
-			ctx.fillText( i.txt, ori_x + 9, ori_y + 25 );
-		} else{
-			ctx.fillText( i.txt, getDrawPos( i.x, i.y ).x + 9, getDrawPos( i.x, i.y ).y + 25 );
+    const drawPos = getDrawPos(item.x, item.y);
+    const isSelectedChess = drawPos === selected_chess;
+
+    if (isSelectedChess && mouse_down) {
+      const offsetX = drawPos.x + (mouse_current_pos.x - mouse_start_pos.x);
+      const offsetY = drawPos.y + (mouse_current_pos.y - mouse_start_pos.y);
+      const gradient = ctx.createLinearGradient(offsetX, offsetY, offsetX + CHESS_WIDTH, offsetY + CHESS_HEIGHT);
+      gradient.addColorStop(0, "white");          // 起始颜色
+      gradient.addColorStop(1, item.color);       // 结束颜色，可根据棋子颜色调整
+      ctx.fillStyle = gradient;
+      ctx.rect(offsetX, offsetY, CHESS_WIDTH, CHESS_HEIGHT);
+      ctx.fill();
+      ctx.fillText(item.txt, offsetX + 9, offsetY + 25);
+    } else {
+      const gradient = ctx.createLinearGradient(drawPos.x, drawPos.y, drawPos.x + CHESS_WIDTH, drawPos.y + CHESS_HEIGHT);
+      gradient.addColorStop(0, "white");          // 起始颜色
+      gradient.addColorStop(1, item.color);       // 结束颜色，可根据棋子颜色调整
+      ctx.fillStyle = gradient;
+      ctx.fillText(item.txt, drawPos.x + 9, drawPos.y + 25);
     }
-	} );
+
+    ctx.closePath();
+    ctx.restore();
+  });
 }

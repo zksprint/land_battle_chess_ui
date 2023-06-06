@@ -1,4 +1,6 @@
-import { handleRole } from "./event";
+import { Rank } from "./chess";
+import { handleGameStart, handleMoveResult, handlePiecePosEvent, handleRole } from "./event";
+import { ws } from "./login";
 
 type MessageCallback = (message: string) => void;
 
@@ -61,19 +63,48 @@ export class WebSocketClient {
   setMessageCallback(callback: MessageCallback): void {
     this.messageCallback = callback;
   }
+
+  async sendReadyEvent(gameId: string){
+    console.log("send message to server",gameId)
+    await ws.sendAsync(JSON.stringify({type:"ready",game_id:gameId}))
+  }
+
+  async sendMoveEvent(piece:number,x:number,y:number,targetX: number, targetY: number,flagX?:number,flagY?: number){
+    console.log(`send move event to server piece rank:${piece} (x:${x},y:${y}) (targetX:${targetX} targetY:${targetY})`)
+    if(piece == Rank.FieldMarshal){
+      await ws.sendAsync(JSON.stringify({type:"move",piece:piece,x:x,y:y,
+            target_x:targetX,target_y:targetY,flag_x:flagX,flag_y:flagY}))
+    }else{
+      await ws.sendAsync(JSON.stringify({type:"move",piece:piece,x:x,y:y,target_x:targetX,target_y:targetY}))
+    }
+  }
+
+  async sendWhisperEvent(piece:number,x:number,y:number,flagX?:number,flagY?: number){
+    console.log(`sendWhisperEvent rank:${piece} (x:${x},y:${y} flag(${flagX},${flagY}))`)
+    if(piece == Rank.FieldMarshal){
+      await ws.sendAsync(JSON.stringify({type:"whisper",piece:piece,x:x,y:y,flag_x:flagX,flag_y:flagY}))
+    }else{
+      await ws.sendAsync(JSON.stringify({type:"whisper",piece:piece,x:x,y:y}))
+    }
+  }
 }
 
 enum EMessageType {
   ROLE = "role",
-  MOVE = "move"
+  READY = "ready",
+  GAME_START = "gameStart",
+  MOVE = "move",
+  PIECE_POS = "piecePos",
+  MOVE_RESULT = "moveResult"
 }
 
 export function handleWsServerMsg(message: string) {
   const jsData = JSON.parse(message);
   const handlers:any = {
     [EMessageType.ROLE]: handleRole,
-    [EMessageType.MOVE]: handleMove,
-    // 添加其他消息类型的处理函数
+    [EMessageType.GAME_START]: handleGameStart,
+    [EMessageType.PIECE_POS]: handlePiecePosEvent,
+    [EMessageType.MOVE_RESULT]:handleMoveResult,
   };
 
   const handler = handlers[jsData.type];
@@ -84,16 +115,3 @@ export function handleWsServerMsg(message: string) {
   }
 }
 
-
-
-function handleMove(data: any) {
-  console.log(
-    "handle serverMsg move:",
-    data.x,
-    data.y,
-    data.target_x,
-    data.target_y,
-    data.piece,
-    data.pubkey
-  );
-}

@@ -1,19 +1,25 @@
 import { Account } from "@aleohq/sdk";
 import { Chess, ChessStatus, Rank } from "./chess";
 import { Location, LocationType } from "./location";
+import { gameId } from "./login";
+import { Game } from "./game";
 
 export class Board {
   private chessList: Chess[] = [];
   locations: Location[] = []
   private rowCnt: number = 12
   private columnCnt: number = 5
-  private account:Account;
 
-  initChessList(address:string,oppAddress:string) {
-    var chess_array = [0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 11];
+  initChessList(address: string, oppAddress: string) {
+    //司令、军长、师长、师长、旅长、旅长、团长、团长、营长、营长、连长、连长、连长、排长、排长、排长、工、工、工、雷、雷、雷、炸、炸、军旗
+    const chess_array = [Rank.FieldMarshal, Rank.General, Rank.MajorGeneral, Rank.MajorGeneral,
+       Rank.Brigadier, Rank.Brigadier, Rank.Colonel, Rank.Colonel, Rank.Major, Rank.Major,
+       Rank.Captain, Rank.Captain, Rank.Captain, Rank.Lieutenant, Rank.Lieutenant, Rank.Lieutenant,
+       Rank.Engineer, Rank.Engineer, Rank.Engineer, Rank.Landmine, Rank.Landmine, Rank.Landmine,
+       Rank.Bomb, Rank.Bomb, Rank.Flag];
     chess_array.forEach((rank: number) => {
       this.chessList.push(new Chess(rank, address));
-      this.chessList.push(new Chess(rank, oppAddress));
+      this.chessList.push(new Chess(Rank.Empty as number, oppAddress));
     });
   }
 
@@ -25,7 +31,6 @@ export class Board {
           this.addEdge(this.getLocationInstance(x, y), this.getLocationInstance(x + 1, y));
         }
       }
-
       //添加play1上下相邻的location、play2上下相邻的location 
       for (let y = 0; y <= 4; y++) {	//cols
         this.addEdge(this.getLocationInstance(x, y), this.getLocationInstance(x, y + 1));
@@ -33,7 +38,6 @@ export class Board {
       for (let y = 6; y <= 10; y++) {	//cols
         this.addEdge(this.getLocationInstance(x, y), this.getLocationInstance(x, y + 1));
       }
-
     }
 
     //前线周边位置添加
@@ -60,24 +64,31 @@ export class Board {
 
   // After Field Marshal died, the flag will be reveal 
   RevealFlag(address: string) {
-    this.GetChessList(address,false).forEach((chess) => {
+    this.GetChessList(address, false).forEach((chess) => {
       if (chess.rank == Rank.Flag) {
         chess.displayed = true;
       }
     });
   }
 
+  getFlagLocation(address: string) {
+    for (const location of this.locations) {
+      if (location.getChess() && location.getChess().rank == Rank.Flag && location.getChess().address == address) {
+        return location
+      }
+    }
+  }
+
   destroy_chess(chess: Chess) {
     if (chess.rank == Rank.Flag) {
-      GameOver(chess.address);	
+      GameOver(chess.address);
     }
     //RevealFlag when Field Marshal is destroyed
-    if (chess.rank == 0) {
+    if (chess.rank == Rank.FieldMarshal) {
       this.RevealFlag(chess.address);
     }
     chess.chessStatus = ChessStatus.Captured;
   }
-
 
   // Get the location of a chess
   GetChessLocation(chess: Chess): Location | undefined {
@@ -86,24 +97,24 @@ export class Board {
         return location
       }
     }
-    console.log("error GetChessLocation not find chess:",chess.rank)
+    console.log("error GetChessLocation not find chess:", chess.rank)
     return undefined;
   }
 
   // Return a list of chess for that player.
   // All the chess belongs to the player will be returned,
   // no matter died or alive.
-  GetChessList(address: string,OnBoard:boolean=false ): Chess[] {
-    let chessList:Chess[] = [];
-    for(const chess of this.chessList){
-      if(chess.address != address){
+  GetChessList(address: string, OnBoard: boolean = false): Chess[] {
+    let chessList: Chess[] = [];
+    for (const chess of this.chessList) {
+      if (chess.address != address) {
         continue;
       }
-      if(OnBoard){
-        if (chess.chessStatus==ChessStatus.OnBoard ) {
+      if (OnBoard) {
+        if (chess.chessStatus == ChessStatus.OnBoard) {
           chessList.push(chess);
         }
-      }else{
+      } else {
         chessList.push(chess)
       }
 
@@ -131,17 +142,17 @@ export class Board {
       }
 
       switch (chess.rank) {
-        case 11: //大本营
+        case Rank.Flag: //大本营
           if (tmp.locationType == LocationType.Headquarters) {
             locations.push(this.getLocationInstance(x, y));
           }
           break;
-        case 10://炸弹只能放在次2行
+        case Rank.Bomb://炸弹只能放在次2行
           if (y >= 7) {
             locations.push(this.getLocationInstance(x, y));
           }
           break;
-        case 9: //
+        case Rank.Landmine: //
           if (y >= 10) {
             locations.push(this.getLocationInstance(x, y));
           }
@@ -154,9 +165,9 @@ export class Board {
   }
 
   GetPlaceableLocation(oriLocation: Location): Location[] {
-    let tmpLoc:Location[] = [];
+    let tmpLoc: Location[] = [];
     let chess = oriLocation.getChess();
-    if(!chess){
+    if (!chess) {
       return tmpLoc
     }
 
@@ -174,23 +185,22 @@ export class Board {
       this.GetPlaceableLocation(targetLocation).indexOf(oriLocation) != -1) {
       oriLocation.setChess(targetChess!);
       targetLocation.setChess(oriChess!);
-      console.log(targetChess, oriChess);
     }
   }
 
   // List the movable location for a chess on a particular location
   GetMovableLocation(oriLocation: Location) {
-    let queue:any = [];
-    let visited:any = [];
-    let movable:Location[] = [];
-    if (oriLocation.getChess()?.rank == 9 || oriLocation.locationType == LocationType.Headquarters) {
+    let queue: any = [];
+    let visited: any = [];
+    let movable: Location[] = [];
+    if (oriLocation.getChess()?.rank == Rank.Landmine || oriLocation.locationType == LocationType.Headquarters) {
       return [];
     }
 
     visited.push(oriLocation);
     oriLocation.edges.forEach((location) => queue.push(location));
     while (queue.length > 0) {
-      let targetLocation:Location = queue.shift();
+      let targetLocation: Location = queue.shift();
       visited.push(targetLocation);
       let [movable1, movable2] = is_movable(oriLocation, targetLocation);
       if (movable1) {
@@ -219,61 +229,25 @@ export class Board {
     return movable;
   }
 
-  Move(chess: Chess, targetLocation: Location): number {
-    var oriLocation = this.GetChessLocation(chess);
-    if (oriLocation && this.GetMovableLocation(oriLocation)!.indexOf(targetLocation) == -1) {
-      //verify the movable positions for the chess on oriLocation
-      //if not movable, return
-      return -1;
+  isFlagLocation(x: number, y: number): boolean {
+    if ((y == 0 || y == 11) && (x == 1 || x == 3)) {
+      return true
     }
-    //if chess is already on the board
-    if (oriLocation) {
-      oriLocation.removeChess();
-    }
-    //targetLocation is null
-    let targetChess = targetLocation.getChess();
-    if (targetChess == undefined) {
-      targetLocation.setChess(chess);
-      return 0
-    }
-
-    // //if target location have enemy chess
-    // let [alive0, alive1] = chess.compareRank(targetChess);
-    // if (!alive0) {
-    //   this.destroy_chess(chess);
-    // }
-    // if (!alive1) {
-    //   this.destroy_chess(targetChess);
-    // }
-    // //chess1 alive and chess2 dead
-    // if (alive0 && !alive1) {
-    //   targetLocation.setChess(chess);
-    // }
-    // //chess1 dead and chess2 alive
-    // if (!alive0 && alive1) {
-    //   targetLocation.setChess(targetChess);
-    // }
-    // //both dead
-    // if (!alive0 && !alive1) {
-    //   oriLocation!.removeChess();
-    //   targetLocation.removeChess();
-    // }
-
-    return 0
+    return false
   }
 
   private isOnRail(x: number, y: number): boolean {
     //第一行和最后一行
-    if(y == 0 || y == 11){
+    if (y == 0 || y == 11) {
       return false
     }
 
-    if(y == 1 || y == 5 || y == 6 || y== 10){
+    if (y == 1 || y == 5 || y == 6 || y == 10) {
       return true
     }
 
-    if(y == 2 || y == 3 || y == 4 || y == 7 || y==8){
-      if(x==0 || x == 4){
+    if (y == 2 || y == 3 || y == 4 || y == 7 || y == 8) {
+      if (x == 0 || x == 4) {
         return true
       }
       return false
@@ -303,13 +277,12 @@ export class Board {
     }
   }
 
-  constructor(account: Account,oppAddress: string) {
-    this.account = account;
+  constructor(account: Account, oppAddress: string) {
     for (let y = 0; y < this.rowCnt; y++) {
       this.setLocationType(y)
     }
     // init chess rank
-    this.initChessList(account.toString(),oppAddress)
+    this.initChessList(account.toString(), oppAddress)
     //init edge location
     this.initLocationEdges()
 
@@ -342,7 +315,7 @@ function is_movable(oriLocation: Location, targetLocation: Location) {
 
   //for rail case 工兵
   let engineer = false;
-  if (oriLocation.getChess() && oriLocation.getChess()!.rank == 8) {
+  if (oriLocation.getChess() && oriLocation.getChess()!.rank == Rank.Engineer) {
     engineer = true;
   }
   //位置相邻
@@ -366,7 +339,7 @@ function is_movable(oriLocation: Location, targetLocation: Location) {
     return [true, true];
   }
 
-  if (enemyChess == 0){
+  if (enemyChess == 0) {
     return [false, false];
   }
 
@@ -374,32 +347,32 @@ function is_movable(oriLocation: Location, targetLocation: Location) {
     return [false, false];
   }
 
-  if (targetLocation.isOnRail == false){
+  if (targetLocation.isOnRail == false) {
     return [false, false];
   }
 
   if (engineer) {
-    if (enemyChess == 1 && targetLocation.locationType != LocationType.Camp){
+    if (enemyChess == 1 && targetLocation.locationType != LocationType.Camp) {
       return [true, false];
     }
 
     return [true, true];
   } else {
     if (enemyChess == 1 && targetLocation.locationType != LocationType.Camp &&
-      (oriLocation.x == targetLocation.x || oriLocation.y == targetLocation.y)){
-        return [true, false];
-      }
+      (oriLocation.x == targetLocation.x || oriLocation.y == targetLocation.y)) {
+      return [true, false];
+    }
 
-    if (targetLocation.isOnRail == true && (oriLocation.x == targetLocation.x || oriLocation.y == targetLocation.y)){
+    if (targetLocation.isOnRail == true && (oriLocation.x == targetLocation.x || oriLocation.y == targetLocation.y)) {
       return [true, true];
     }
-    else{
+    else {
       return [false, false];
     }
   }
 
 }
 
-function GameOver(address:string){
-	alert("Player"+address+"Won!");
+function GameOver(address: string) {
+  alert("Player" + address + "Won!");
 }

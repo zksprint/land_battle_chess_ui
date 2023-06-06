@@ -189,14 +189,12 @@
 		<canvas id="Board" class="Board" width="469" height="650"></canvas>
 		<div id="ctrl_panel" class="ctrl_panel">
 			<div style="margin: 150px 0 0 0 ">
-				<div id="waiting_message" style="color: orange; font-weight: bold; font-size: 150%;">等待对方准备</div>
-				<div>
-					<div style="color:orange;font-weight: bold; font-size: 150%;">Time Limit</div>
-					<input type="number" name="timer" id="timer" min="0" max="120" value="60"
-						style="width: 70px; height: 35px;font-size:24px;" />
+				<div style="visibility:hidden" id="timerShow">
+					<div id="showMessage" style="color: #282928; font-size: 120%;">等待对方准备</div>
+					<!-- <input type="number" name="timer" id="timer" min="0" max="120" value="60"
+						style="width: 70px; height: 35px;font-size:24px;" /> -->
 				</div>
-
-				<a href="#" class="button" id="start_button">START</a>
+				<a href="#" class="button" id="start_button">READY</a>
 				<a href="#" class="button" id="stop_button" style="visibility:hidden">STOP</a>
 				<div>
 					<input type="checkbox" name="debug" id="debug" value="debug">

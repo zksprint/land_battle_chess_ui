@@ -1,142 +1,118 @@
 import init,{ RecordCiphertext } from "@aleohq/wasm";
-import { Board } from "./board";
-import { Chess, ChessStatus, Rank_zhHK,  } from "./chess";
+import { Chess, ChessStatus, RANK_ZH,  } from "./chess";
 import { drawChess, resetChess } from "./draw";
-import { board, setCurrentGamePlayer } from "./event";
-import {  current_player} from "./init";
-import { Account } from '@aleohq/sdk'
-import { Game } from "./game";
-import { account, gameId } from "./login";
-import { getGameId } from "./api";
+import { board, clearSelectChess } from "./event";
+import { EGameState, Game } from "./game";
+import { account, gameId, ws } from "./login";
+import { aleoInitializeBoard, aleoUrl, newAleoClient, nodeConnection } from "./aleo";
 
 init().then(wasm=>{
-  console.log("wasm is ....")
-  let acctount = new Account({privateKey:"APrivateKey1zkp6FJo46GTFmCTX3yqVS7raJQSLztGd6sC585tLqDqzqBN"})
-  console.log('acctount:', acctount.toString())
+  newAleoClient(aleoUrl)
+   nodeConnection.getLatestBlock().then(block => {
+    console.log("init wasm block",block)
+   })
 
-  const record = RecordCiphertext.fromString(
-    'record1qyqsprsrxps7kltcp9wdjlhm0dxxejt8a5lelfdk76h4sg3l300wlrcwqyxx66trwfhkxun9v35hguerqqpqzqyl396kvfrcvhdq566gg6gxcjcs8xs8d2uuher4mugnf3lqhzqkp5jp8g9ldz2hu45um65h82w3uazj5s3wajy9nxqeva353da4c58qsz9f3as',
-  )
-  console.log('RecordCiphertext:', JSON.stringify(record))
 })
 
 
 export const CHESS_WIDTH = 60;
 export const CHESS_HEIGHT = 33;
-export const player_color = ["red","blue"]
+// export const player_color = ["red","blue"]
+export const player_color = ["#FFFFFF","#FFFFFF"]
+export const bgColors = ["#E74C3C", "#3498DB"]
 
 //timer
 export let timer_value = 0;
-export let game_started = false;
+export let gameStarted = false;
 export let chess_changed = true;
 
 
-export function myTimer(): void {
-  if (game_started) {
-    const timerElement = document.getElementById("timer") as HTMLInputElement;
-    let i = parseInt(timerElement.value);
-    if (i > 0) {
-      timerElement.value = (i - 1).toString();
-    } else {
-      alert("Time's up!");
-      game_started = false;
-    }
-  }
-}
+// export function myTimer(): void {
+//   if (gameStarted) {
+//     const timerElement = document.getElementById("timer") as HTMLInputElement;
+//     let i = parseInt(timerElement.value);
+//     if (i > 0) {
+//       timerElement.value = (i - 1).toString();
+//     } else {
+//       alert("Time's up!");
+//       gameStarted = false;
+//     }
+//   }
+// }
 
-export function timerNextPlayer(): void {
-  const timerElement = document.getElementById("timer") as HTMLInputElement;
-  timerElement.value = timer_value.toString();
-}
+// export function timerNextPlayer(): void {
+//   const timerElement = document.getElementById("timer") as HTMLInputElement;
+//   timerElement.value = timer_value.toString();
+// }
 
-export function GameStart(): void {
-
-  const timerElement = document.getElementById("timer") as HTMLInputElement;
-  timer_value = parseInt(timerElement.value);
-  timerElement.disabled = true;
+export function GameReady() {
+  // const timerElement = document.getElementById("timer") as HTMLInputElement;
+  // timer_value = parseInt(timerElement.value);
+  // timerElement.disabled = true;
 
   const startButton = document.getElementById("start_button") as HTMLButtonElement;
   startButton.style.visibility = "hidden";
 
   const stopButton = document.getElementById("stop_button") as HTMLButtonElement;
   stopButton.style.visibility = "visible";
-  game_started = true;
+
+  console.log("GameReady")
+  aleoInitializeBoard().then(()=>{
+    ws.sendReadyEvent(gameId).then()
+    clearSelectChess()
+    Game.getInstance(gameId).setGameState(EGameState.WAITING_GAME_START)
+  })
+
 }
 
 export function GameStop(): void {
-  const timerElement = document.getElementById("timer") as HTMLInputElement;
-  timerElement.disabled = false;
+  // const timerElement = document.getElementById("timer") as HTMLInputElement;
+  // timerElement.disabled = false;
 
   const startButton = document.getElementById("start_button") as HTMLButtonElement;
   startButton.style.visibility = "visible";
 
   const stopButton = document.getElementById("stop_button") as HTMLButtonElement;
   stopButton.style.visibility = "hidden";
-  game_started = false;
+  gameStarted = false;
 }
-
-
-
-export function AI_Move() {
-  // let rand_pos 
-	// do {
-	// 	console.log( "Current player", current_player );
-	// 	var myArray = board.GetChessList( 1 - current_player ,true);
-	// 	var rand = Math.floor( Math.random() * myArray.length );
-	// 	var rand_chess = myArray[rand];
-	// 	console.log( "randChess:", rand_chess.rank );
-
-	// 	var myArray2 = board.GetMovableLocation( board.GetChessLocation( rand_chess )!);
-  //   console.log("AI_Move moveable array lenght:", myArray2.length);
-  //   if(myArray2.length == 0){
-  //     continue;
-  //   }
-
-	// 	var rand = Math.floor( Math.random() * myArray2.length );
-	// 	rand_pos = myArray2[rand];
-	// } while ( board.Move( rand_chess, rand_pos ) == -1 );
-  // setCurrentGamePlayer(current_player)
-	// timerNextPlayer();
-	// updateDrawArray();
-}
-
 
 function isChessVisible( chess:Chess):boolean {
-	if ( chess.displayed == true ){
+	if ( chess.displayed == true || chess.address == account.toString()){
 		return true;
   }
-
-	if ( chess.address == account.toString() ){
-		return true;
-  }
-
   return false;
 }
 
+function getPlayerIndex(address:string):number {
+  const player1 = Game.getInstance(gameId).getPlayer1();
+  return (address == player1) ? 0 : 1;
+}
+
+function getPlayerColor(playerIndex:number) {
+  return player_color[playerIndex];
+}
+
+function getBgColor(playerIndex:number) {
+  return bgColors[playerIndex]
+}
+
+
 export function updateDrawArray() {
-	resetChess();
+  resetChess();
 
-  for(const location of board.locations){
+  for (const location of board.locations) {
     const chess = location.getChess();
-    if(chess && chess.chessStatus == ChessStatus.OnBoard ){
-      let visible = isChessVisible( chess );
-      if(chess.address == Game.getInstance(gameId).getPlayer1()){
-        drawChess(Rank_zhHK[chess.rank], location.x, location.y,player_color[0], visible );
-      }else{
-        drawChess(Rank_zhHK[chess.rank], location.x, location.y,player_color[1], visible );
-      }
-
+    if (chess && chess.chessStatus == ChessStatus.OnBoard) {
+      const visible = isChessVisible(chess);
+      const playerIndex = getPlayerIndex(chess.address);
+      const color = getPlayerColor(playerIndex);
+      const rank = RANK_ZH[chess.rank];
+      drawChess(rank, location.x, location.y, color, visible,getBgColor(playerIndex));
     }
   }
-
-	// board.locations.forEach( ( i: { getChess: () => any; x: number; y: number; } ) => {
-	// 	let chess = i.getChess();
-	// 	if ( chess && chess != null && chess.chessStatus == ChessStatus.OnBoard ) {
-	// 		let visible = isChessVisible( chess );
-	// 		drawChess(Rank_zhHK[chess.rank], i.x, i.y, player1? player_color[0]:player_color[1], visible );
-	// 	}
-	// } );
 }
+
 
 
 // testAsm()

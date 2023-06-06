@@ -6,7 +6,7 @@ export let ws: WebSocketClient
 export let account :Account
 export let gameId :string = "0"
 
-function sleep(ms: number) {
+export function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -37,7 +37,7 @@ async function getGameIdFromServer(): Promise<string> {
     }
     await sleep(2000)
   }
-
+  console.log('getGameIdFromServer:',gameId)
   // 隐藏加载动画
   loading.style.display = "none";
   return gameId
@@ -56,7 +56,7 @@ async function connectWs(gameId: string,address:string) {
   //   // 在这里处理来自后台的消息
   // });
 
-  await ws.sendAsync(JSON.stringify({}))
+
 
   // // 发送消息
   // ws.send('Hello, WebSocket!');
@@ -75,10 +75,12 @@ export function changeDisplay() {
 }
 
 export async function LoginHandler() {
+  console.log("enter LoginHandler")
   const gameId = await getGameIdFromServer()
   if (gameId == "0") {
     alert("未到匹配的玩家，等稍后重试!")
     return
   }
+  console.log("enter connectWs")
   await connectWs(gameId,account.toString())
 }

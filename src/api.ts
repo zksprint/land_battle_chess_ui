@@ -41,7 +41,7 @@ export async function pollGetGameId(address:string): Promise<string> {
     const response = await api.get(url);
     if(response.status == 200){
       console.log("pollGetGameId:",response.data.JoinResult.game_id)
-      return response.data.JoinResult.game_id 
+      return response.data.JoinResult.game_id
     }
   } catch (error) {
     console.error('Error:', error);

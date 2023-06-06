@@ -1,24 +1,13 @@
 import { Chess, ChessStatus } from "./chess";
 import { draw, initDraw, resetChess } from "./draw";
 import { board, canvasDown, canvasMousemove, canvasUp, initEventsValue } from "./event";
-import { LoginHandler } from "./login";
-import { GameStart, GameStop,  myTimer, updateDrawArray } from "./main";
+import { Game } from "./game";
+import { LoginHandler, gameId } from "./login";
+import { GameReady, GameStop,updateDrawArray } from "./main";
 
 export let draw_pos: any = [];
 
 export let current_player = "0";
-
-// 当对方准备完成时，更新等待信息
-function updateWaitingMessage(playerName: string) {
-	// 获取等待信息的元素
-	let waitingMessage = document.getElementById("waiting_message");
-	waitingMessage.textContent = playerName + "准备完成";
-}
-
-export function getOpPlayerStatus(code: string) {
-
-}
-
 
 export function init(): void {
 	const x_arr = [7, 370];
@@ -36,74 +25,53 @@ export function init(): void {
 	});
 }
 
-
-
 export function setDefaultPosition(address:string,oppAddress:string) {
+	let p1 = board.GetChessList(address, false);
+	//1
+	board.getLocationInstance(0, 6).setChess(p1[0]);
+	board.getLocationInstance(1, 6).setChess(p1[1]);
+	board.getLocationInstance(2, 6).setChess(p1[2]);
+	board.getLocationInstance(3, 6).setChess(p1[3]);
+	board.getLocationInstance(4, 6).setChess(p1[4]);
+	//2
+	board.getLocationInstance(0, 7).setChess(p1[5]);
+	board.getLocationInstance(2, 7).setChess(p1[6]);
+	board.getLocationInstance(4, 7).setChess(p1[7]);
+	//3
+	board.getLocationInstance(0, 8).setChess(p1[8]);
+	board.getLocationInstance(1, 8).setChess(p1[9]);
+	board.getLocationInstance(3, 8).setChess(p1[10]);
+	board.getLocationInstance(4, 8).setChess(p1[11]);
+	//4
+	board.getLocationInstance(0, 9).setChess(p1[12]);
+	board.getLocationInstance(2, 9).setChess(p1[13]);
+	board.getLocationInstance(4, 9).setChess(p1[14]);
+	//5
+	board.getLocationInstance(0, 10).setChess(p1[15]);
+	board.getLocationInstance(1, 10).setChess(p1[16]);
+	board.getLocationInstance(2, 10).setChess(p1[17]);
+	board.getLocationInstance(3, 10).setChess(p1[18]);
+	board.getLocationInstance(4, 10).setChess(p1[19]);
+	//6
+	board.getLocationInstance(0, 11).setChess(p1[20]);
+	board.getLocationInstance(1, 11).setChess(p1[21]);
+	board.getLocationInstance(2, 11).setChess(p1[22]);
+	board.getLocationInstance(3, 11).setChess(p1[24]);
+	board.getLocationInstance(4, 11).setChess(p1[23]);
 
-		let p1 = board.GetChessList(address, false);
-		//1
-		board.getLocationInstance(0, 6).setChess(p1[0]);
-		board.getLocationInstance(1, 6).setChess(p1[1]);
-		board.getLocationInstance(2, 6).setChess(p1[2]);
-		board.getLocationInstance(3, 6).setChess(p1[3]);
-		board.getLocationInstance(4, 6).setChess(p1[4]);
-		//2
-		board.getLocationInstance(0, 7).setChess(p1[5]);
-		board.getLocationInstance(2, 7).setChess(p1[6]);
-		board.getLocationInstance(4, 7).setChess(p1[7]);
-		//3
-		board.getLocationInstance(0, 8).setChess(p1[8]);
-		board.getLocationInstance(1, 8).setChess(p1[9]);
-		board.getLocationInstance(3, 8).setChess(p1[10]);
-		board.getLocationInstance(4, 8).setChess(p1[11]);
-		//4
-		board.getLocationInstance(0, 9).setChess(p1[12]);
-		board.getLocationInstance(2, 9).setChess(p1[13]);
-		board.getLocationInstance(4, 9).setChess(p1[14]);
-		//5
-		board.getLocationInstance(0, 10).setChess(p1[15]);
-		board.getLocationInstance(1, 10).setChess(p1[16]);
-		board.getLocationInstance(2, 10).setChess(p1[17]);
-		board.getLocationInstance(3, 10).setChess(p1[18]);
-		board.getLocationInstance(4, 10).setChess(p1[19]);
-		//6
-		board.getLocationInstance(0, 11).setChess(p1[20]);
-		board.getLocationInstance(1, 11).setChess(p1[21]);
-		board.getLocationInstance(2, 11).setChess(p1[22]);
-		board.getLocationInstance(3, 11).setChess(p1[24]);
-		board.getLocationInstance(4, 11).setChess(p1[23]);
 
-		p1 = board.GetChessList(oppAddress);
-		board.getLocationInstance(0, 5).setChess(p1[0]);
-		board.getLocationInstance(1, 5).setChess(p1[1]);
-		board.getLocationInstance(2, 5).setChess(p1[2]);
-		board.getLocationInstance(3, 5).setChess(p1[3]);
-		board.getLocationInstance(4, 5).setChess(p1[4]);
-		//2
-		board.getLocationInstance(0, 4).setChess(p1[5]);
-		board.getLocationInstance(2, 4).setChess(p1[6]);
-		board.getLocationInstance(4, 4).setChess(p1[7]);
-		//3
-		board.getLocationInstance(0, 3).setChess(p1[8]);
-		board.getLocationInstance(1, 3).setChess(p1[9]);
-		board.getLocationInstance(3, 3).setChess(p1[10]);
-		board.getLocationInstance(4, 3).setChess(p1[11]);
-		//4
-		board.getLocationInstance(0, 2).setChess(p1[12]);
-		board.getLocationInstance(2, 2).setChess(p1[13]);
-		board.getLocationInstance(4, 2).setChess(p1[14]);
-		//5
-		board.getLocationInstance(0, 1).setChess(p1[15]);
-		board.getLocationInstance(1, 1).setChess(p1[16]);
-		board.getLocationInstance(2, 1).setChess(p1[17]);
-		board.getLocationInstance(3, 1).setChess(p1[18]);
-		board.getLocationInstance(4, 1).setChess(p1[19]);
-		//6
-		board.getLocationInstance(0, 0).setChess(p1[20]);
-		board.getLocationInstance(1, 0).setChess(p1[21]);
-		board.getLocationInstance(2, 0).setChess(p1[22]);
-		board.getLocationInstance(3, 0).setChess(p1[24]);
-		board.getLocationInstance(4, 0).setChess(p1[23]);
+	for(let y = 0; y <6; y++){
+		for(let x = 0; x <5; x++){
+			if((x == 1 || x==3) && (y==4 || y==2)){
+				continue
+			}
+
+			if(x ==2 && y == 3){
+				continue
+			}
+			board.getLocationInstance(x,y).setChess(new Chess(0 as number, oppAddress))
+		}
+	}
 
 }
 
@@ -111,7 +79,7 @@ export function setDefaultPosition(address:string,oppAddress:string) {
 export let canvas: HTMLCanvasElement;
 export let ctx: CanvasRenderingContext2D;
 
-export function  eventInit(){
+export function eventInit() {
 	canvas = document.getElementById("Board") as HTMLCanvasElement;
 	ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 	canvas.addEventListener('mousedown', canvasDown);
@@ -120,20 +88,20 @@ export function  eventInit(){
 	canvas.addEventListener('mousemove', canvasMousemove);
 
 	const startButton = document.getElementById("start_button") as HTMLButtonElement;
-	startButton.addEventListener("click", GameStart);
+	startButton.addEventListener("click", GameReady);
 	const stopButton = document.getElementById("stop_button") as HTMLButtonElement;
 	stopButton.addEventListener("click", GameStop);
-	setInterval(myTimer, 1000);
+	// setInterval(myTimer, 1000);
 
 	const login = document.getElementById("login_button") as HTMLButtonElement;
 	login.addEventListener("click", LoginHandler);
 }
 
-export function drawBoardInit(address:string,oppAddress:string) {
+export function drawBoardInit(address: string, oppAddress: string) {
 	resetChess();
 	init();
 	initDraw()
-	setDefaultPosition(address,oppAddress);
+	setDefaultPosition(address, oppAddress);
 	initEventsValue()
 	setInterval(() => { draw(ctx); });
 	updateDrawArray();
