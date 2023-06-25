@@ -5,12 +5,33 @@ import { board, clearSelectChess } from "./event";
 import { EGameState, Game } from "./game";
 import { account, gameId, ws } from "./login";
 import { aleoInitializeBoard, aleoUrl, newAleoClient, nodeConnection } from "./aleo";
+import { Account } from "@aleohq/sdk";
 
-init().then(wasm=>{
+init().then(async wasm=>{
   newAleoClient(aleoUrl)
    nodeConnection.getLatestBlock().then(block => {
     console.log("init wasm block",block)
    })
+
+   const response = await nodeConnection.getTransaction('at1cz7alvrc664897ynxq6eyt7px4nkksm2k53n64ccx3q9fc3eyvxq4d86dp')
+   if (response instanceof Error) {
+     console.error(response);
+     return "";
+   }
+
+  // const account = new Account({privateKey:privateKey})
+  //  for (const tx of response.execution.transitions) {
+  //    // 在输出中查找满足条件的记录
+  //    const output = tx.outputs.find((output) =>
+  //      currentAccount.ownsRecordCiphertext(output.value)
+  //    );
+
+  //    if (output) {
+  //      // 解密记录文本
+  //      recordText = currentAccount.decryptRecord(output.value);
+  //      console.log(recordText);
+  //      break; // 跳出内层循环
+  //    }
 
 })
 

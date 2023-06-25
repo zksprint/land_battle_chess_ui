@@ -62,13 +62,10 @@ export function setDefaultPosition(address:string,oppAddress:string) {
 
 	for(let y = 0; y <6; y++){
 		for(let x = 0; x <5; x++){
-			if((x == 1 || x==3) && (y==4 || y==2)){
+			if(((x == 1 || x==3) && (y==4 || y==2)) || (x ==2 && y == 3)){
 				continue
 			}
 
-			if(x ==2 && y == 3){
-				continue
-			}
 			board.getLocationInstance(x,y).setChess(new Chess(0 as number, oppAddress))
 		}
 	}

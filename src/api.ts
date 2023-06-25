@@ -43,6 +43,7 @@ export async function pollGetGameId(address:string): Promise<string> {
       console.log("pollGetGameId:",response.data.JoinResult.game_id)
       return response.data.JoinResult.game_id
     }
+    return 
   } catch (error) {
     console.error('Error:', error);
     return ""

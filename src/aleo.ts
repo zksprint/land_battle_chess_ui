@@ -76,19 +76,17 @@ export function updateMoveInfo(gameId: string, x: number, y: number,
   console.log(`updateMoveInfo result:${moveInfo}`)
 }
 
-
-
 export const aleoUrl: string = "http://149.28.212.193:3030"
+export const developUrl: string = "http://149.28.212.193:4040"
 export let nodeConnection: AleoNetworkClient
-
 export let developerClient: DevelopmentClient
 let transactionId: string = ""
 const programId = "land_battle_chess.aleo"
 
-export function newAleoClient(url: string) {
+export function newAleoClient(url: string,devUrl:string=developUrl) {
   console.log("init newAleoClinet....")
   nodeConnection = new AleoNetworkClient(url)
-  developerClient = new DevelopmentClient(url)
+  developerClient = new DevelopmentClient(devUrl)
 }
 
 function getInitLinePiece(): [string[], string, string] {
@@ -99,7 +97,6 @@ function getInitLinePiece(): [string[], string, string] {
   for (let x = 0; x < 5; x++) {
     for (let y = 0; y < 11; y++) {
       let [revX, revY] = Game.getInstance(gameId).isPlayer1() ? [x, y] : getRevertLocation(x, y);
-
       const chess = board.getLocationInstance(revX, revY).getChess();
       if (chess == null) {
         lines[x] = lines[x].or(Long.fromNumber(0).shiftLeft(5 * x));
@@ -158,19 +155,23 @@ async function getRecordInfo(): Promise<string> {
         flag_x: u64, flag_y: u32, public game_id: u64, public player_index: u32, public arbiter: address) -> (player_state, bool) 
  */
 export async function aleoInitializeBoard() {
-  let [lines, flagXStr, flagYStr] = getInitLinePiece()
-  const arbiter = Game.getInstance(gameId).getArbiter()
-  const playerIndexStr = Game.getInstance(gameId).isPlayer1 ? "0u32" : "u32"
-  console.log("begin to get unspendRecordInfo....")
-  const recordFee = await getUnspendRecordInfo()
-  if(recordFee.length == 0){
-    throw console.error("failed to find unspent records")
-  }
+  // let [lines, flagXStr, flagYStr] = getInitLinePiece()
+  // const arbiter = Game.getInstance(gameId).getArbiter()
+  // const playerIndexStr = Game.getInstance(gameId).isPlayer1 ? "0u32" : "u32"
+  // console.log("begin to get unspendRecordInfo....")
+  // const recordFee = await getUnspendRecordInfo()
+  // if(recordFee.length == 0){
+  //   throw console.error("failed to find unspent records")
+  // }
 
   console.log(`aleoInitializeBoard`)
-  transactionId = await developerClient.executeProgram(programId, "player_initialize_board", 0, [lines[0], lines[1], lines[2], lines[3],
-                                                       lines[4], flagXStr, flagYStr, playerIndexStr, arbiter],undefined,undefined,recordFee[0].toString())
+  const record = getUnspendRecordInfo()
+  transactionId = await developerClient.executeProgram("hello.aleo","sum", 100,["1u32","0u32"],"APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH","{owner:aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px.private,  microcredits: 374989986086745u64.private,  _nonce: 2769753336736429046444578370097192476451397803312190936168551998746304500831group.public}")
+  // transactionId = await developerClient.executeProgram(programId, "player_initialize_board", 0, [lines[0], lines[1], lines[2], lines[3],
+  //                                                      lines[4], flagXStr, flagYStr, playerIndexStr, arbiter],undefined,undefined,recordFee[0].toString())
   console.log(`aleoInitializeBoard,id:`,transactionId)
+
+
 }
 
 /**
@@ -201,7 +202,8 @@ export async function aleoWhisperPiece(targetX: number, targetY: number) {
 export async function getUnspendRecordInfo() {
   const maxMicrocredits = 100000;
   const block = await nodeConnection.getLatestHeight()
-  const key = Game.getInstance(gameId).getCurrentAccount().privateKey().to_string()
+  // const key = Game.getInstance(gameId).getCurrentAccount().privateKey().to_string()
+  const key = "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH"
   let records = await nodeConnection.findUnspentRecords(0, block as number, key, undefined, maxMicrocredits);
   console.log("finish ....")
   return records as RecordPlaintext[]
