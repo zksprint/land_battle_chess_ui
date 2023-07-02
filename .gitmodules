@@ -1,0 +1,3 @@
+[submodule "aleo"]
+	path = aleo
+	url = git@github.com:AleoHQ/sdk.git
