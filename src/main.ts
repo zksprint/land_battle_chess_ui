@@ -5,7 +5,6 @@ import { board, clearSelectChess } from "./event";
 import { EGameState, Game } from "./game";
 import { account, gameId, ws } from "./login";
 import { aleoInitializeBoard, aleoUrl, isError, newAleoClient, nodeConnection } from "./aleo";
-import { Block } from "@aleohq/sdk";
 import init, { RecordPlaintext } from "../aleo/wasm/pkg/aleo_wasm";
 
 init().then(async wasm => {

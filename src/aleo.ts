@@ -1,10 +1,12 @@
-import { AleoNetworkClient, DevelopmentClient } from "@aleohq/sdk";
+
 import { gameId, sleep } from "./login";
 import { Game } from "./game";
 import { board } from "./event";
 import { Rank } from "./chess";
 import { getRevertLocation } from "./location";
 import { RecordPlaintext } from "../aleo/wasm/pkg/aleo_wasm";
+import { AleoNetworkClient } from "../aleo/sdk/src/aleo_network_client";
+import { DevelopmentClient } from "../aleo/sdk/src/development_client";
 
 // import { Transaction } from "@aleohq/sdk";
 const Long = require('long');
@@ -98,7 +100,7 @@ export async function getFirstUnspentRecord(privateKey: string): Promise<RecordP
   const lastHeight = res as number
   console.log("lastHeight:", lastHeight," privateKey:",privateKey," begin to find unspend record")
 
-  const response1 = await nodeConnection.findUnspentRecords(lastHeight - 3000, lastHeight, privateKey, undefined, undefined)
+  const response1 = await nodeConnection.findUnspentRecords(2500, 4000, privateKey, undefined, undefined)
   if (isError(response1)) {
     alert("Error fetching latest block error:.");
     return
@@ -162,7 +164,7 @@ async function getRecordInfo(): Promise<string> {
     const currentAccount = Game.getInstance(gameId).getCurrentAccount();
     for (const tx of response.execution.transitions) {
       // 在输出中查找满足条件的记录
-      const output = tx.outputs.find((output) =>
+      const output = tx.outputs.find((output: { value: any; }) =>
         currentAccount.ownsRecordCiphertext(output.value)
       );
 
@@ -197,8 +199,8 @@ export async function aleoInitializeBoard() {
     throw console.error("record is not find")
   }
 
-  transactionId = await developerClient.executeProgram(programId, "player_initialize_board", 10000, [ lines[ 0 ], lines[ 1 ], lines[ 2 ], lines[ 3 ],
-  lines[ 4 ], flagXStr, flagYStr, gameIdStr, playerIndexStr, arbiter ], privateKey, undefined, record.toString())
+  transactionId = await developerClient.executeProgram(programId, "player_initialize_board", 10000, [ "243944968059068u64", "243944970543153u64" ,"243944969889843u64", 
+  "243944969494674u64", "243944969840532u64", "1u64", "0u32", "0u64", "1u32", "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px" ], privateKey, undefined, record.toString())
   console.log(`aleoInitializeBoard,id:`, transactionId)
 }
 
