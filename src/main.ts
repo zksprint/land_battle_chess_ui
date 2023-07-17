@@ -4,11 +4,16 @@ import { drawChess, resetChess } from "./draw";
 import { board, clearSelectChess } from "./event";
 import { EGameState, Game } from "./game";
 import { account, gameId, ws } from "./login";
-import { aleoInitializeBoard, aleoUrl, isError, newAleoClient, nodeConnection } from "./aleo";
+import { aleoInitializeBoard, aleoUrl, newAleoClient } from "./aleo";
 import init, { RecordPlaintext } from "../aleo/wasm/pkg/aleo_wasm";
 
 init().then(async wasm => {
   newAleoClient(aleoUrl)
+    // const record = await getFirstUnspentRecord("APrivateKey1zkp2ckdgYhNWAkQaCUsEHK8GvfYvTUnULdry3FXV7jbCsZn")
+    // if (record == undefined){
+    //   throw console.error("record is not find")
+    // }
+    
 })
 
 
@@ -54,6 +59,7 @@ export function GameReady() {
   stopButton.style.visibility = "visible";
 
   console.log("GameReady")
+
   aleoInitializeBoard().then(() => {
     ws.sendReadyEvent(gameId).then()
     clearSelectChess()
