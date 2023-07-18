@@ -23,21 +23,20 @@ export function updateMoveInfo(gameId: string, x: number, y: number,
   flagX: number, flagY: number,
   oppFlagX: number, oppFlagY: number, gameWinner: number) {
 
-  let tmpInfo = {
-    gameId: gameId + "u64",
-    player: Game.getInstance(gameId).getLocalAddresses(),
-    x: x.toString() + "u64",
-    y: y.toString() + "u32",
-    target_x: targetX.toString() + "u64",
-    target_y: targetY.toString() + "u32",
-    attack_result: attackResult.toString() + "u32", // 0: simple move, 1: win, 2: draw, 3: lose
-    flag_x: flagX.toString() + "u64",
-    flag_y: flagY.toString() + "u32",
-    opp_flag_x: oppFlagX.toString() + "u64",
-    opp_flag_y: oppFlagY.toString() + "u32",
-    game_winner: gameWinner.toString() + "u32"
-  }
-  moveInfo = JSON.stringify(tmpInfo)
+  moveInfo = `{
+    game_id: ${gameId}u64,
+    player: ${Game.getInstance(gameId).getLocalAddresses()},
+    x: ${x.toString()}u64,
+    y: ${y.toString()}u32,
+    target_x: ${targetX.toString()}u64,
+    target_y: ${targetY.toString()}u32,
+    attack_result: ${attackResult.toString()}u32,
+    flag_x: ${flagX.toString()}u64,
+    flag_y: ${flagY.toString()}u32,
+    opp_flag_x: ${oppFlagX.toString()}u64,
+    opp_flag_y: ${oppFlagY.toString()}u32,
+    game_winner: ${gameWinner.toString()}u32
+  }`
   console.log(`updateMoveInfo result:${moveInfo}`)
 }
 
