@@ -4,7 +4,7 @@ import { drawChess, resetChess } from "./draw";
 import { board, clearSelectChess } from "./event";
 import { EGameState, Game } from "./game";
 import { account, gameId, ws } from "./login";
-import { aleoInitializeBoard, aleoUrl, newAleoClient } from "./aleo";
+import { aleoInitializeBoard, aleoUrl, newAleoClient, nodeConnection } from "./aleo";
 import init, { RecordPlaintext } from "../aleo/wasm/pkg/aleo_wasm";
 
 init().then(async wasm => {
@@ -13,6 +13,13 @@ init().then(async wasm => {
     // if (record == undefined){
     //   throw console.error("record is not find")
     // }
+    // const response = await nodeConnection.getTransaction('at19y8leemercrhfxjwq58pr9lkhyla3glyh3t2p9lsf3a5eqdxecqqfg86ef');
+    // if (response instanceof Error) {
+    //   console.error("!!!fetch error:" + response);
+    //   return ;
+    // }
+    // console.log(`++++++aleoWhisperPiece result tx is:${JSON.stringify(response.execution.transitions[])}`)
+  
     
 })
 

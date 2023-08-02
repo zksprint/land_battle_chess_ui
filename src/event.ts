@@ -170,9 +170,9 @@ async function canvasHandleMoveEventState(chess: Chess, oriPos: any, targetLocat
     ws.sendMoveEvent(chess.rank, oriPos.x, oriPos.y, targetLocation.x, targetLocation.y);
   }
 
-  Game.getInstance(gameId).setGameState(EGameState.WAITING_MOVABLE_RESULT);
   //等待上链
   await aleoMovePiece(oriPos.x, oriPos.y, targetLocation.x,targetLocation.y)
+  Game.getInstance(gameId).setGameState(EGameState.WAITING_MOVABLE_RESULT);
 }
 
 export function canvasMousemove(e: MouseEvent) {

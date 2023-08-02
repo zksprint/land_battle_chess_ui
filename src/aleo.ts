@@ -22,26 +22,26 @@ export function updateMoveInfo(gameId: string, x: number, y: number,
   targetX: number, targetY: number, attackResult: number,
   flagX: number, flagY: number,
   oppFlagX: number, oppFlagY: number, gameWinner: number) {
-
+  console.log(`x:${x} y:${y} targetX:${targetX} targetY${targetY} attackResult:${attackResult} flagX${flagX} flagY:${flagX} gameWinner:${gameWinner}`)
   moveInfo = `{
     game_id: ${gameId}u64,
     player: ${Game.getInstance(gameId).getLocalAddresses()},
-    x: ${x.toString()}u64,
-    y: ${y.toString()}u32,
-    target_x: ${targetX.toString()}u64,
-    target_y: ${targetY.toString()}u32,
-    attack_result: ${attackResult.toString()}u32,
-    flag_x: ${flagX.toString()}u64,
-    flag_y: ${flagY.toString()}u32,
-    opp_flag_x: ${oppFlagX.toString()}u64,
-    opp_flag_y: ${oppFlagY.toString()}u32,
-    game_winner: ${gameWinner.toString()}u32
+    x: ${x.toString()+'u64'},
+    y: ${y.toString()+'u32'},
+    target_x: ${targetX.toString()+'u64'},
+    target_y: ${targetY.toString()+'u32'},
+    attack_result: ${attackResult.toString()+'u32'},
+    flag_x: ${flagX.toString()+'u64'},
+    flag_y: ${flagY.toString()+'u32'},
+    opp_flag_x: ${oppFlagX.toString()+'u64'},
+    opp_flag_y: ${oppFlagY.toString()+'u32'},
+    game_winner: ${gameWinner.toString()+'u32'}
   }`
   console.log(`updateMoveInfo result:${moveInfo}`)
 }
 
 export const aleoUrl: string = "http://127.0.0.1:3030"
-export const developUrl: string = "http://127.0.0.1:4040"
+export const developUrl: string = "http://192.168.2.20:4040"
 export let nodeConnection: AleoNetworkClient
 export let developerClient: DevelopmentClient
 let transactionId: any
@@ -111,6 +111,7 @@ async function getRecordInfo(txId: string, viewKey: ViewKey): Promise<RecordPlai
     return
   }
 
+  console.log(`begin to getRecordInfo txId:${txId}`)
   try {
     const response = await nodeConnection.getTransaction(txId.slice(1, -1));
     if (response instanceof Error) {
@@ -166,9 +167,14 @@ export async function aleoMovePiece(x: number, y: number, targetX: number, targe
   const privateKey = Game.getInstance(gameId).getCurrentAccount().privateKey().to_string()
   const [playState, recordFee] = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
 
-  transactionId = await developerClient.executeProgram(programId, "move_piece", 1, [playState.toString(), moveInfo,
+  let transactionId1 = await developerClient.executeProgram(programId, "move_piece", 1, [playState.toString(), moveInfo,
   x.toString() + "u64", y.toString() + "u32",
   targetX.toString() + "u64", targetY.toString() + "u32"], privateKey, undefined, recordFee.toString())
+  console.log(`aleoMovePiece transactionId is:${transactionId1}`)
+  await sleep(20000)
+  const [playState1, recordFee1] = await getRecordInfo(transactionId1, Game.getInstance(gameId).getCurrentAccount().viewKey())
+  console.log(`++++++aleoWhisperPiece result tx is :${playState1.toString()} tx is:${JSON.stringify(recordFee1.toString)}`)
+
 }
 
 /**
@@ -181,18 +187,17 @@ export async function aleoWhisperPiece(targetX: number, targetY: number) {
 
   const privateKey = Game.getInstance(gameId).getCurrentAccount().privateKey().to_string()
 
-  transactionId = await developerClient.executeProgram(programId, "whisper_piece", 1, [playState.toString(), moveInfo,
+  let transactionId1 = await developerClient.executeProgram(programId, "whisper_piece", 1, [playState.toString(), moveInfo,
     targetX.toString()+ "u64", targetY.toString() + "u32"], privateKey, undefined, recordFee.toString())
+  
+  await sleep(20000)
+  console.log(`=======aleoWhisperPiece transactionId is:${transactionId1} and begin to get transatcion ========`)
+  const [playState1, recordFee1] = await getRecordInfo(transactionId1, Game.getInstance(gameId).getCurrentAccount().viewKey())
+  console.log(`++++++aleoWhisperPiece result tx is :${playState1.toString()} tx is:${JSON.stringify(recordFee1.toString)}`)
 
-  const tx = await nodeConnection.getTransaction(transactionId)
-  if (isError(tx)) {
-    console.log(`Failed to whisperPiece id:${gameId} localAddress:${Game.getInstance(gameId).getLocalAddresses()}`)
-    return ""
-  }
-
-  const txInfo = tx as Transaction
-  for (const data of txInfo.execution.transitions) {
-    console.log(`+++++++++++++aleoWhisperPiece txInfo:${JSON.stringify(data)}++++++++++++++++++`)
-  }
+  // const txInfo = tx as Transaction
+  // for (const data of txInfo.execution.transitions) {
+  //   console.log(`+++++++++++++aleoWhisperPiece txInfo:${JSON.stringify(data)}++++++++++++++++++`)
+  // }
 
 }
