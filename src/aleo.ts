@@ -13,6 +13,7 @@ import { Transaction, ViewKey } from "@aleohq/sdk";
 const Long = require('long');
 
 let moveInfo: string
+let moveInfoObj = {gameId:'', x:0, y:0, targetX:0, targetY:0, attackResult:0, flagX:0, flagY:0, oppFlagX:0, oppFlagY:0, gameWinner:0}
 
 export function isError(result: any): result is Error {
   return result instanceof Error;
@@ -23,19 +24,30 @@ export function updateMoveInfo(gameId: string, x: number, y: number,
   flagX: number, flagY: number,
   oppFlagX: number, oppFlagY: number, gameWinner: number) {
   console.log(`x:${x} y:${y} targetX:${targetX} targetY${targetY} attackResult:${attackResult} flagX${flagX} flagY:${flagX} gameWinner:${gameWinner}`)
+  moveInfoObj.gameId = gameId
+  moveInfoObj.x = x !== undefined ? x : moveInfoObj.x;
+  moveInfoObj.y = y !== undefined ? y : moveInfoObj.y;
+  moveInfoObj.targetX = (targetX == undefined ) ?  moveInfoObj.targetX : targetX;
+  moveInfoObj.targetY = (targetY == undefined ) ? moveInfoObj.targetY: targetY;
+  moveInfoObj.attackResult = attackResult !== undefined ? attackResult : moveInfoObj.attackResult;
+  moveInfoObj.flagX = (flagX == undefined || flagX == null) ? moveInfoObj.flagX: flagX;
+  moveInfoObj.flagY = (flagY == undefined || flagY == null) ? moveInfoObj.flagY: flagY ;
+  moveInfoObj.oppFlagX = (oppFlagX == undefined || oppFlagX == null ) ?  moveInfoObj.oppFlagX : oppFlagX;
+  moveInfoObj.oppFlagY = (oppFlagY == undefined || oppFlagY == null) ?   moveInfoObj.oppFlagY : oppFlagY;
+
   moveInfo = `{
-    game_id: ${gameId}u64,
+    game_id: ${moveInfoObj.gameId}u64,
     player: ${Game.getInstance(gameId).getLocalAddresses()},
-    x: ${x.toString()+'u64'},
-    y: ${y.toString()+'u32'},
-    target_x: ${targetX.toString()+'u64'},
-    target_y: ${targetY.toString()+'u32'},
-    attack_result: ${attackResult.toString()+'u32'},
-    flag_x: ${flagX.toString()+'u64'},
-    flag_y: ${flagY.toString()+'u32'},
-    opp_flag_x: ${oppFlagX.toString()+'u64'},
-    opp_flag_y: ${oppFlagY.toString()+'u32'},
-    game_winner: ${gameWinner.toString()+'u32'}
+    x: ${moveInfoObj.x.toString()+'u64'},
+    y: ${moveInfoObj.y.toString()+'u32'},
+    target_x: ${moveInfoObj.targetX.toString()+'u64'},
+    target_y: ${moveInfoObj.targetY.toString()+'u32'},
+    attack_result: ${moveInfoObj.attackResult.toString()+'u32'},
+    flag_x: ${moveInfoObj.flagX.toString()+'u64'},
+    flag_y: ${moveInfoObj.flagY.toString()+'u32'},
+    opp_flag_x: ${moveInfoObj.oppFlagX.toString()+'u64'},
+    opp_flag_y: ${moveInfoObj.oppFlagY.toString()+'u32'},
+    game_winner: ${moveInfoObj.gameWinner.toString()+'u32'}
   }`
   console.log(`updateMoveInfo result:${moveInfo}`)
 }
@@ -106,12 +118,7 @@ function getInitLinePiece(): [string[], number, number] {
 async function getRecordInfo(txId: string, viewKey: ViewKey): Promise<RecordPlaintext[]> {
   let recordInfo = []
 
-  if (transactionId == "") {
-    console.log("Failed to get transaction Id")
-    return
-  }
-
-  console.log(`begin to getRecordInfo txId:${txId}`)
+  // console.log(`begin to getRecordInfo txId:${txId}`)
   try {
     const response = await nodeConnection.getTransaction(txId.slice(1, -1));
     if (response instanceof Error) {
@@ -130,9 +137,9 @@ async function getRecordInfo(txId: string, viewKey: ViewKey): Promise<RecordPlai
 
     recordInfo.push(playState)
     recordInfo.push(unspent)
-    console.log(`---------getRecordInfo playState:${playState.toString()}  unspentRecord:${unspent.toString()}----------------`)
+    // console.log(`---------getRecordInfo playState:${playState.toString()}  unspentRecord:${unspent.toString()}----------------`)
   } catch (error) {
-    console.error(error);
+    console.error("!!!! wrong getRecordInfo:",error);
   }
 
   return recordInfo;
@@ -167,13 +174,14 @@ export async function aleoMovePiece(x: number, y: number, targetX: number, targe
   const privateKey = Game.getInstance(gameId).getCurrentAccount().privateKey().to_string()
   const [playState, recordFee] = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
 
-  let transactionId1 = await developerClient.executeProgram(programId, "move_piece", 1, [playState.toString(), moveInfo,
+  transactionId = await developerClient.executeProgram(programId, "move_piece", 1, [playState.toString(), moveInfo,
   x.toString() + "u64", y.toString() + "u32",
   targetX.toString() + "u64", targetY.toString() + "u32"], privateKey, undefined, recordFee.toString())
-  console.log(`aleoMovePiece transactionId is:${transactionId1}`)
-  await sleep(20000)
-  const [playState1, recordFee1] = await getRecordInfo(transactionId1, Game.getInstance(gameId).getCurrentAccount().viewKey())
-  console.log(`++++++aleoWhisperPiece result tx is :${playState1.toString()} tx is:${JSON.stringify(recordFee1.toString)}`)
+  console.log(`aleoMovePiece transactionId is:${transactionId}`)
+
+  await sleep(10000)
+  const [playState1, recordFee1] = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
+  console.log(`aleoMovePiece result tx is :${playState1.toString()} tx is:${JSON.stringify(recordFee1.toString)}`)
 
 }
 
@@ -187,13 +195,14 @@ export async function aleoWhisperPiece(targetX: number, targetY: number) {
 
   const privateKey = Game.getInstance(gameId).getCurrentAccount().privateKey().to_string()
 
-  let transactionId1 = await developerClient.executeProgram(programId, "whisper_piece", 1, [playState.toString(), moveInfo,
+  transactionId = await developerClient.executeProgram(programId, "whisper_piece", 1, [playState.toString(), moveInfo,
     targetX.toString()+ "u64", targetY.toString() + "u32"], privateKey, undefined, recordFee.toString())
   
-  await sleep(20000)
-  console.log(`=======aleoWhisperPiece transactionId is:${transactionId1} and begin to get transatcion ========`)
-  const [playState1, recordFee1] = await getRecordInfo(transactionId1, Game.getInstance(gameId).getCurrentAccount().viewKey())
-  console.log(`++++++aleoWhisperPiece result tx is :${playState1.toString()} tx is:${JSON.stringify(recordFee1.toString)}`)
+  console.log(`after executeProgram whisper_piece id:${transactionId}`)
+  await sleep(10000)
+
+  const [playState1, recordFee1] = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
+  console.log(`aleoWhisperPiece result tx is :${playState1.toString()} tx is:${JSON.stringify(recordFee1.toString)}`)
 
   // const txInfo = tx as Transaction
   // for (const data of txInfo.execution.transitions) {

@@ -163,15 +163,14 @@ function canvasHandleWaitingReadyState(oriLocation: Location, targetLocation: Lo
 }
 
 async function canvasHandleMoveEventState(chess: Chess, oriPos: any, targetLocation: Location) {
+  //等待上链
+  await aleoMovePiece(oriPos.x, oriPos.y, targetLocation.x,targetLocation.y)
   if (chess.rank == Rank.FieldMarshal) {
     const flagLocation = board.getFlagLocation(Game.getInstance(gameId).getLocalAddresses());
     ws.sendMoveEvent(chess.rank, oriPos.x, oriPos.y, targetLocation.x, targetLocation.y, flagLocation.x, flagLocation.y);
   } else {
     ws.sendMoveEvent(chess.rank, oriPos.x, oriPos.y, targetLocation.x, targetLocation.y);
   }
-
-  //等待上链
-  await aleoMovePiece(oriPos.x, oriPos.y, targetLocation.x,targetLocation.y)
   Game.getInstance(gameId).setGameState(EGameState.WAITING_MOVABLE_RESULT);
 }
 
@@ -311,7 +310,6 @@ export async function handleMoveResult(data: any) {
   }
   stepNextMove(state)
 
-
   if(data.game_winner == 1 && Game.getInstance(gameId).isPlayer1()){
     alert("game is over and player1 are winner")
     Game.getInstance(gameId).finish()
@@ -366,9 +364,11 @@ function handleLoseMoveEvent(origX: number, origY: number, flagX: number, flagY:
 export function stepNextMove(state:EGameState) {
   if (state == EGameState.WAITING_MOVEABLE){
     Game.getInstance(gameId).setGameState(EGameState.MOVABLE)
+    console.log("waitting move changto to moveable")
     updateShowMessage("please move piece")
   }else{
     clearSelectChess()
+    console.log("chang to waiting moveable")
     Game.getInstance(gameId).setGameState(EGameState.WAITING_MOVEABLE)
     updateShowMessage("opponent move piece")
   }

@@ -67,6 +67,10 @@ export function GameReady() {
 
   console.log("GameReady")
 
+  // ws.sendReadyEvent(gameId).then()
+  // clearSelectChess()
+  // Game.getInstance(gameId).setGameState(EGameState.WAITING_GAME_START)
+
   aleoInitializeBoard().then(() => {
     ws.sendReadyEvent(gameId).then()
     clearSelectChess()

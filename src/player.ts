@@ -25,7 +25,7 @@ export function movingPlayerHandleSimpleMove(oriX: number, oriY: number, targetX
 }
 //待走棋方 x、y已经坐标已经转换
 export function waitingPlayerHandleSimpleMove(oriX: number, oriY: number, targetX: number, targetY: number) {
-  console.log(`waitingPlayerHandleSimpleMove`)
+  console.log(`waitingPlayerHandleSimpleMove, oriX:${oriX} oriY:${oriY} targetX:${targetX} targetY:${targetY}`)
   let oriLocation = board.getLocationInstance(oriX, oriY)
   let chess = oriLocation.getChess()
   oriLocation.removeChess()
