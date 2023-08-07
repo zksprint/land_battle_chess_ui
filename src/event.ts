@@ -234,7 +234,8 @@ export async function handlePiecePosEvent(data: any) {
   }
 
   // assert(targetChess.address == game.getCurrentAccount().toString())
-  await aleoWhisperPiece(reX,reY)
+  const rank = await aleoWhisperPiece(reX,reY)
+  console.log(`handlePiecePosEvent rank:${rank} targetChess rank:${targetChess.rank}`)
   if (targetChess.rank == Rank.FieldMarshal) {
     const flagLocation = board.getFlagLocation(Game.getInstance(gameId).getLocalAddresses())
     await ws.sendWhisperEvent(targetChess.rank, data.target_x, data.target_y, flagLocation.x, flagLocation.y)

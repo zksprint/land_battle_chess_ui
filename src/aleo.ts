@@ -23,7 +23,7 @@ export function updateMoveInfo(gameId: string, x: number, y: number,
   targetX: number, targetY: number, attackResult: number,
   flagX: number, flagY: number,
   oppFlagX: number, oppFlagY: number, gameWinner: number) {
-  console.log(`x:${x} y:${y} targetX:${targetX} targetY${targetY} attackResult:${attackResult} flagX${flagX} flagY:${flagX} gameWinner:${gameWinner}`)
+  // console.log(`x:${x} y:${y} targetX:${targetX} targetY${targetY} attackResult:${attackResult} flagX${flagX} flagY:${flagX} gameWinner:${gameWinner}`)
   moveInfoObj.gameId = gameId
   moveInfoObj.x = x !== undefined ? x : moveInfoObj.x;
   moveInfoObj.y = y !== undefined ? y : moveInfoObj.y;
@@ -49,13 +49,14 @@ export function updateMoveInfo(gameId: string, x: number, y: number,
     opp_flag_y: ${moveInfoObj.oppFlagY.toString()+'u32'},
     game_winner: ${moveInfoObj.gameWinner.toString()+'u32'}
   }`
-  console.log(`updateMoveInfo result:${moveInfo}`)
+  // console.log(`updateMoveInfo result:${moveInfo}`)
 }
 
 export const aleoUrl: string = "http://127.0.0.1:3030"
 export const developUrl: string = "http://192.168.2.20:4040"
 export let nodeConnection: AleoNetworkClient
 export let developerClient: DevelopmentClient
+let plainTexts: RecordPlaintext[] = []
 let transactionId: any
 const programId = "land_battle_chess.aleo"
 
@@ -95,11 +96,10 @@ function getInitLinePiece(): [string[], number, number] {
   let flagYStr = 0;
 
   for (let x = 0; x < 5; x++) {
-    for (let y = 0; y < 11; y++) {
+    for (let y = 0; y < 12; y++) {
       let [revX, revY] = Game.getInstance(gameId).isPlayer1() ? [x, y] : getRevertLocation(x, y);
       const chess = board.getLocationInstance(revX, revY).getChess();
       if (chess == null) {
-        lines[x] = lines[x].or(Long.fromNumber(0).shiftLeft(5 * x));
         continue;
       }
 
@@ -107,12 +107,38 @@ function getInitLinePiece(): [string[], number, number] {
         flagXStr = revX;
         flagYStr = revY;
       }
-      lines[x] = lines[x].or(Long.fromNumber(chess.rank).shiftLeft(5 * x));
+      lines[x] = lines[x].or(Long.fromNumber(chess.rank).shiftLeft(4 * y));
     }
   }
   const newLines = lines.map(line => Long.fromNumber(line).toString() + "u64");
 
   return [newLines, flagXStr, flagYStr];
+}
+
+export function getChessFromCoordinates(newLines:string[], x:number, y:number) {
+  const lines = newLines.map(item => {
+    const match = item.match(/(\d+)u\d+/);
+    if (match) {
+      return parseInt(match[1]);
+    }
+    return null;
+  });
+
+  const mask = 15
+  const row = y*4
+  const chess = board.getLocationInstance(x, y).getChess();
+  let rank = (lines[x] & (mask<< row)) >> row// 获取对应位置的 rank
+  console.log(`getChessFromCoordinates  lines:${JSON.stringify(lines)},rank:${rank} chess rank:${chess.rank}`)
+  if (chess == null) {
+    return null;
+  }
+
+  if (chess.rank == rank && chess.address == Game.getInstance(gameId).getLocalAddresses()) {
+    console.log(`getChessFromCoordinates x:${x} y:${y} rank:${chess.rank}`)
+    return chess;
+  }
+
+  return null;
 }
 
 async function getRecordInfo(txId: string, viewKey: ViewKey): Promise<RecordPlaintext[]> {
@@ -171,18 +197,89 @@ export async function aleoInitializeBoard() {
 export async function aleoMovePiece(x: number, y: number, targetX: number, targetY: number) {
   console.log(`aleoMovePiece:(x:${x}, y:${y} (targetx:${targetX}, targety:${targetY})`)
 
-  const privateKey = Game.getInstance(gameId).getCurrentAccount().privateKey().to_string()
-  const [playState, recordFee] = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
+  //aleoWhisperPiece 执行之后可能有playstate和record记录
+  if(plainTexts.length == 0 ){
+    plainTexts = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
+  }
 
-  transactionId = await developerClient.executeProgram(programId, "move_piece", 1, [playState.toString(), moveInfo,
-  x.toString() + "u64", y.toString() + "u32",
-  targetX.toString() + "u64", targetY.toString() + "u32"], privateKey, undefined, recordFee.toString())
+  const privateKey = Game.getInstance(gameId).getCurrentAccount().privateKey().to_string()
+  transactionId = await developerClient.executeProgram(programId, "move_piece", 1, [plainTexts[0].toString(), moveInfo,
+                  x.toString() + "u64", y.toString() + "u32",
+                  targetX.toString() + "u64", targetY.toString() + "u32"], privateKey, undefined, plainTexts[1].toString())
+  plainTexts = []
   console.log(`aleoMovePiece transactionId is:${transactionId}`)
 
-  await sleep(10000)
-  const [playState1, recordFee1] = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
-  console.log(`aleoMovePiece result tx is :${playState1.toString()} tx is:${JSON.stringify(recordFee1.toString)}`)
+  // await sleep(10000)
+  // const [playState1, recordFee1] = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
+  // console.log(`aleoMovePiece result tx is :${playState1.toString()} tx is:${JSON.stringify(recordFee1.toString)}`)
 
+}
+
+function extractValuesFromString(str:string) {
+  const values:any = {};
+
+  // 匹配 owner
+  const ownerRegex = /owner: ([^,\s]+)/;
+  const ownerMatch = str.match(ownerRegex);
+  if (ownerMatch) {
+    values.owner = ownerMatch[1];
+  }
+
+  // 匹配 gates
+  const gatesRegex = /gates: ([^,\s]+)/;
+  const gatesMatch = str.match(gatesRegex);
+  if (gatesMatch) {
+    values.gates = gatesMatch[1];
+  }
+
+  // 匹配 game_id
+  const gameIdRegex = /game_id: ([^,\s]+)/;
+  const gameIdMatch = str.match(gameIdRegex);
+  if (gameIdMatch) {
+    values.game_id = gameIdMatch[1];
+  }
+
+  // 匹配 board
+  const boardRegex = /board: {([^}]+)}/;
+  const boardMatch = str.match(boardRegex);
+  if (boardMatch) {
+    const boardStr = boardMatch[1];
+    const lineRegex = /([^:\s]+): ([^,\s]+)/g;
+    let lineMatch;
+    while ((lineMatch = lineRegex.exec(boardStr))) {
+      values[lineMatch[1]] = lineMatch[2];
+    }
+  }
+
+  // 匹配 flag_x
+  const flagXRegex = /flag_x: ([^,\s]+)/;
+  const flagXMatch = str.match(flagXRegex);
+  if (flagXMatch) {
+    values.flag_x = flagXMatch[1];
+  }
+
+  // 匹配 flag_y
+  const flagYRegex = /flag_y: ([^,\s]+)/;
+  const flagYMatch = str.match(flagYRegex);
+  if (flagYMatch) {
+    values.flag_y = flagYMatch[1];
+  }
+
+  // 匹配 game_winner
+  const gameWinnerRegex = /game_winner: ([^,\s]+)/;
+  const gameWinnerMatch = str.match(gameWinnerRegex);
+  if (gameWinnerMatch) {
+    values.game_winner = gameWinnerMatch[1];
+  }
+
+  // 匹配 arbiter
+  const arbiterRegex = /arbiter: ([^,\s]+)/;
+  const arbiterMatch = str.match(arbiterRegex);
+  if (arbiterMatch) {
+    values.arbiter = arbiterMatch[1];
+  }
+
+  return values
 }
 
 /**
@@ -191,19 +288,30 @@ export async function aleoMovePiece(x: number, y: number, targetX: number, targe
  */
 export async function aleoWhisperPiece(targetX: number, targetY: number) {
   console.log(`aleoWhisperPiece: (targetx:${targetX}, targety:${targetY})`)
-  const [playState, recordFee] = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
+
+  if(plainTexts.length == 0 ){
+    plainTexts = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
+  }
 
   const privateKey = Game.getInstance(gameId).getCurrentAccount().privateKey().to_string()
+  transactionId = await developerClient.executeProgram(programId, "whisper_piece", 1, [plainTexts[0].toString(), moveInfo,
+    targetX.toString()+ "u64", targetY.toString() + "u32"], privateKey, undefined, plainTexts[1].toString())
 
-  transactionId = await developerClient.executeProgram(programId, "whisper_piece", 1, [playState.toString(), moveInfo,
-    targetX.toString()+ "u64", targetY.toString() + "u32"], privateKey, undefined, recordFee.toString())
-  
+  plainTexts = []
   console.log(`after executeProgram whisper_piece id:${transactionId}`)
   await sleep(10000)
 
-  const [playState1, recordFee1] = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
-  console.log(`aleoWhisperPiece result tx is :${playState1.toString()} tx is:${JSON.stringify(recordFee1.toString)}`)
+  plainTexts = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
+  console.log(`aleoWhisperPiece result tx is :${plainTexts[0].toString()} `)
 
+
+  const aleoData = extractValuesFromString(plainTexts[0].toString())
+  console.log(`aleoWhisperPiece extractValuesFromString:${JSON.stringify(aleoData)}`)
+  // const aleoData = JSON.parse(plainTexts[0].toString())
+  const lines = [aleoData.line0,aleoData.line1,aleoData.line2,aleoData.line3,aleoData.line4]
+  const rank = getChessFromCoordinates(lines,targetX,targetY)
+
+  return rank
   // const txInfo = tx as Transaction
   // for (const data of txInfo.execution.transitions) {
   //   console.log(`+++++++++++++aleoWhisperPiece txInfo:${JSON.stringify(data)}++++++++++++++++++`)
