@@ -13,7 +13,7 @@ import {
   waitingPlayerHandleDrawMove, waitingPlayerHandleLoseMove,
   waitingPlayerHandleSimpleMove, waitingPlayerHandleWinMove
 } from './player';
-import { aleoMovePiece, aleoWhisperPiece, updateMoveInfo } from './aleo';
+import { aleoMovePiece, aleoWhisperPiece, chessFlag, updateMoveInfo } from './aleo';
 
 // const assert = require('assert');
 export let mouse_down = false;
@@ -166,8 +166,7 @@ async function canvasHandleMoveEventState(chess: Chess, oriPos: any, targetLocat
   //等待上链
   await aleoMovePiece(oriPos.x, oriPos.y, targetLocation.x,targetLocation.y)
   if (chess.rank == Rank.FieldMarshal) {
-    const flagLocation = board.getFlagLocation(Game.getInstance(gameId).getLocalAddresses());
-    ws.sendMoveEvent(chess.rank, oriPos.x, oriPos.y, targetLocation.x, targetLocation.y, flagLocation.x, flagLocation.y);
+    ws.sendMoveEvent(chess.rank, oriPos.x, oriPos.y, targetLocation.x, targetLocation.y, chessFlag.flagX, chessFlag.flagY);
   } else {
     ws.sendMoveEvent(chess.rank, oriPos.x, oriPos.y, targetLocation.x, targetLocation.y);
   }
@@ -224,24 +223,29 @@ export async function handlePiecePosEvent(data: any) {
   //获取转为我方棋子信息
   let [reX, reY] = getRevertLocation(data.target_x, data.target_y)
   let targetChess = board.getLocationInstance(reX, reY).getChess()
-  if (targetChess == null) {
+  // if (targetChess == null) {
+  //   console.log(`handlePiecePosEvent chess is null and send resX :${data.target_x} resY:${data.target_y} reX:${reX} rexY:${reY}`)
+  //   await ws.sendWhisperEvent(0, data.target_x, data.target_y)
+  //   return
+  // }
+
+  // if(targetChess.address != Game.getInstance(gameId).getLocalAddresses()) {
+  //   console.log(`handlePiecePosEvent error target is not owner chess:(x:${data.target_x}, y:${data.target_y}) revert:(x:${reX}, y:${reY})`)
+  // }
+
+  // assert(targetChess.address == game.getCurrentAccount().toString())
+  const chess = await aleoWhisperPiece(reX,reY)
+  console.log(`handlePiecePosEvent get Chess rank:${chess?.rank} targetChess rank:${targetChess?.rank} rex:${reX} reY:${reY}`)
+  if(chess == null){
     await ws.sendWhisperEvent(0, data.target_x, data.target_y)
     return
   }
 
-  if(targetChess.address != Game.getInstance(gameId).getLocalAddresses()) {
-    console.log(`handlePiecePosEvent error target is not owner chess:(x:${data.target_x}, y:${data.target_y}) revert:(x:${reX}, y:${reY})`)
-  }
-
-  // assert(targetChess.address == game.getCurrentAccount().toString())
-  const rank = await aleoWhisperPiece(reX,reY)
-  console.log(`handlePiecePosEvent rank:${rank} targetChess rank:${targetChess.rank}`)
-  if (targetChess.rank == Rank.FieldMarshal) {
-    const flagLocation = board.getFlagLocation(Game.getInstance(gameId).getLocalAddresses())
-    await ws.sendWhisperEvent(targetChess.rank, data.target_x, data.target_y, flagLocation.x, flagLocation.y)
+  if (chess.rank == Rank.FieldMarshal) {
+    await ws.sendWhisperEvent(chess.rank, data.target_x, data.target_y, chessFlag.flagX, chessFlag.flagY)
   } else {
     //发送棋子信息
-    await ws.sendWhisperEvent(targetChess.rank, data.target_x, data.target_y)
+    await ws.sendWhisperEvent(chess.rank, data.target_x, data.target_y)
   }
 
 }
@@ -258,6 +262,7 @@ function getPositions(data: any) {
   if (Game.getInstance(gameId).getGameState() != EGameState.WAITING_MOVABLE_RESULT) {
     let [revert_X, revert_Y] = getRevertLocation(data.x, data.y)
     let [revert_X1, revert_Y1] = getRevertLocation(data.target_x, data.target_y)
+
     return [revert_X, revert_Y, revert_X1, revert_Y1]
   }
 
@@ -267,21 +272,15 @@ function getPositions(data: any) {
 function updateMoveResult(x:number, y:number,targetX:number,targetY:number,attackResult:number,game_winner:number=0,
     flag_x:number,flag_y:number,
     opp_flag_x:number,opp_flag_y:number) {
-  let flagX = 5
-  let flagY = 0
+
   let oppFlagX = 5
   let oppFlagY = 0
-
-  if(game_winner)
-
-  if(board.isFlagLocation(flag_x,flag_y)){
-     [flagX,flagY] = getRevertLocation(flag_x,flag_y)
-  }
 
   if(board.isFlagLocation(opp_flag_x,opp_flag_y)){
     [oppFlagX,oppFlagY] =getRevertLocation(opp_flag_x,opp_flag_y)
   }
 
+  console.log(`updateMoveResult flagx:${flag_x} flagy:${flag_y} oppFlagX:${oppFlagX} oppFlagY:${oppFlagY}`)
   updateMoveInfo(gameId,x,y,targetX,targetY,attackResult,flag_x,flag_y,oppFlagX,oppFlagY,game_winner)
   
 }
@@ -291,7 +290,8 @@ export async function handleMoveResult(data: any) {
   const [origX, origY, targetX, targetY] = getPositions(data)
   const state = Game.getInstance(gameId).getGameState()
 
-  updateMoveResult(origX,origY,targetX,targetY,data.AttackResult,data.game_winner,data.flag_x,data.flag_y,data.opp_flag_x,data.opp_flag_y)
+  console.log(`handleMoveResult origx:${origX} origY:${origY} targetX:${targetX} targetY:${targetY} AttackResult:${data.attack_result}  winner:${data.game_winner}`)
+  updateMoveResult(origX,origY,targetX,targetY,data.attack_result,data.game_winner,data.flag_x,data.flag_y,data.opp_flag_x,data.opp_flag_y)
 
   switch (data.attack_result) {
     case AttackResult.SimpleMove:

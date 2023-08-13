@@ -14,6 +14,7 @@ const Long = require('long');
 
 let moveInfo: string
 let moveInfoObj = {gameId:'', x:0, y:0, targetX:0, targetY:0, attackResult:0, flagX:0, flagY:0, oppFlagX:0, oppFlagY:0, gameWinner:0}
+export let chessFlag = {flagX:0,flagY:0}
 
 export function isError(result: any): result is Error {
   return result instanceof Error;
@@ -92,27 +93,23 @@ export function newAleoClient(url: string, devUrl: string = developUrl) {
 
 function getInitLinePiece(): [string[], number, number] {
   let lines = [Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO];
-  let flagXStr = 0;
-  let flagYStr = 0;
-
   for (let x = 0; x < 5; x++) {
-    for (let y = 0; y < 12; y++) {
-      let [revX, revY] = Game.getInstance(gameId).isPlayer1() ? [x, y] : getRevertLocation(x, y);
-      const chess = board.getLocationInstance(revX, revY).getChess();
+    for (let y = 6; y < 12; y++) {
+      const chess = board.getLocationInstance(x, y).getChess();
       if (chess == null) {
         continue;
       }
 
       if (chess.rank == Rank.Flag && chess.address == Game.getInstance(gameId).getLocalAddresses()) {
-        flagXStr = revX;
-        flagYStr = revY;
+        chessFlag.flagX = x;
+        chessFlag.flagY = y;
       }
       lines[x] = lines[x].or(Long.fromNumber(chess.rank).shiftLeft(4 * y));
     }
   }
   const newLines = lines.map(line => Long.fromNumber(line).toString() + "u64");
 
-  return [newLines, flagXStr, flagYStr];
+  return [newLines, chessFlag.flagX , chessFlag.flagY];
 }
 
 export function getChessFromCoordinates(newLines:string[], x:number, y:number) {
@@ -128,9 +125,9 @@ export function getChessFromCoordinates(newLines:string[], x:number, y:number) {
   const row = y*4
   const chess = board.getLocationInstance(x, y).getChess();
   let rank = (lines[x] & (mask<< row)) >> row// 获取对应位置的 rank
-  console.log(`getChessFromCoordinates  lines:${JSON.stringify(lines)},rank:${rank} chess rank:${chess.rank}`)
-  if (chess == null) {
-    return null;
+  console.log(`getChessFromCoordinates  lines:${JSON.stringify(lines)},rank:${rank} chess rank:${chess?.rank} x:${x} y:${y}`)
+  if(rank == 0){
+    return null
   }
 
   if (chess.rank == rank && chess.address == Game.getInstance(gameId).getLocalAddresses()) {
@@ -181,7 +178,7 @@ export async function aleoInitializeBoard() {
   const gameIdStr = gameId + "u64"
   const playerIndexStr = Game.getInstance(gameId).isPlayer1 ? "0u32" : "1u32"
 
-  console.log(`aleoInitializeBoard`)
+  console.log(`aleoInitializeBoard,lines:${JSON.stringify(lines)} flagXStr:${flagXStr} flagYStr:${flagYStr}}`)
   const privateKey = Game.getInstance(gameId).getCurrentAccount().privateKey().to_string()
   updateMoveInfo(gameId, 0, 0, 0, 0, 0, flagXStr, flagYStr, 0, 0, 0)
 
@@ -299,7 +296,7 @@ export async function aleoWhisperPiece(targetX: number, targetY: number) {
 
   plainTexts = []
   console.log(`after executeProgram whisper_piece id:${transactionId}`)
-  await sleep(10000)
+  await sleep(20000)
 
   plainTexts = await getRecordInfo(transactionId, Game.getInstance(gameId).getCurrentAccount().viewKey())
   console.log(`aleoWhisperPiece result tx is :${plainTexts[0].toString()} `)

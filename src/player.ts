@@ -25,7 +25,6 @@ export function movingPlayerHandleSimpleMove(oriX: number, oriY: number, targetX
 }
 //待走棋方 x、y已经坐标已经转换
 export function waitingPlayerHandleSimpleMove(oriX: number, oriY: number, targetX: number, targetY: number) {
-  console.log(`waitingPlayerHandleSimpleMove, oriX:${oriX} oriY:${oriY} targetX:${targetX} targetY:${targetY}`)
   let oriLocation = board.getLocationInstance(oriX, oriY)
   let chess = oriLocation.getChess()
   oriLocation.removeChess()
@@ -49,7 +48,6 @@ function updateChessWinMove(origX: number, origY: number, targetX: number, targe
 export function movingPlayerHandleWinMove(origX: number, origY: number,
   targetX: number, targetY: number,
   oppFlagX: number, oppFlagY: number) {
-  console.log(`movingPlayerHandleWinMove`)
   updateChessWinMove(origX, origY, targetX, targetY)
   if (board.isFlagLocation(oppFlagX, oppFlagY)) {
     revealOppFlag(oppFlagX, oppFlagY)
@@ -60,7 +58,6 @@ export function movingPlayerHandleWinMove(origX: number, origY: number,
 export function waitingPlayerHandleWinMove(origX: number, origY: number,
   targetX: number, targetY: number,
   oppFlagX: number, oppFlagY: number) {
-  console.log(`waitingPlayerHandleWinMove`)
   
   updateChessWinMove(origX, origY, targetX, targetY)
 
