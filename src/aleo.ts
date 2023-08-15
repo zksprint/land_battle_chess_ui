@@ -91,7 +91,7 @@ export function newAleoClient(url: string, devUrl: string = developUrl) {
   developerClient = new DevelopmentClient(devUrl)
 }
 
-function getInitLinePiece(): [string[], number, number] {
+export function getInitLinePiece(): [string[], number, number] {
   let lines = [Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO, Long.UZERO];
   for (let x = 0; x < 5; x++) {
     for (let y = 6; y < 12; y++) {
@@ -104,10 +104,17 @@ function getInitLinePiece(): [string[], number, number] {
         chessFlag.flagX = x;
         chessFlag.flagY = y;
       }
+
       lines[x] = lines[x].or(Long.fromNumber(chess.rank).shiftLeft(4 * y));
+      // const mask = Long.fromNumber(15);
+      // const row = Long.fromNumber(y * 4);
+      // let rank = lines[x].and(mask.shl(row)).shr(row); // 使用Long类进行位操作
+      // console.log(`getInitLinePiece x:${x} y:${y} rank:${chess.rank} lines:${lines[x]} decode rank:${rank}`)
     }
   }
   const newLines = lines.map(line => Long.fromNumber(line).toString() + "u64");
+
+
 
   return [newLines, chessFlag.flagX , chessFlag.flagY];
 }
@@ -116,22 +123,22 @@ export function getChessFromCoordinates(newLines:string[], x:number, y:number) {
   const lines = newLines.map(item => {
     const match = item.match(/(\d+)u\d+/);
     if (match) {
-      return parseInt(match[1]);
+      return Long.fromString(match[1]);
     }
-    return null;
+    return Long.UZERO;
   });
 
-  const mask = 15
-  const row = y*4
+  const mask = Long.fromNumber(15);
+  const row = Long.fromNumber(y * 4);
   const chess = board.getLocationInstance(x, y).getChess();
-  let rank = (lines[x] & (mask<< row)) >> row// 获取对应位置的 rank
-  console.log(`getChessFromCoordinates  lines:${JSON.stringify(lines)},rank:${rank} chess rank:${chess?.rank} x:${x} y:${y}`)
-  if(rank == 0){
-    return null
+  let rank = lines[x].and(mask.shl(row)).shr(row); // 使用Long类进行位操作
+  console.log(`getChessFromCoordinates  lines:${JSON.stringify(lines)},rank:${rank} chess rank:${chess?.rank} x:${x} y:${y}`);
+  if (rank.isZero()) {
+    return null;
   }
 
-  if (chess.rank == rank && chess.address == Game.getInstance(gameId).getLocalAddresses()) {
-    console.log(`getChessFromCoordinates x:${x} y:${y} rank:${chess.rank}`)
+  if (chess.rank == rank.toNumber() && chess.address == Game.getInstance(gameId).getLocalAddresses()) {
+    console.log(`getChessFromCoordinates x:${x} y:${y} rank:${chess.rank}`);
     return chess;
   }
 
