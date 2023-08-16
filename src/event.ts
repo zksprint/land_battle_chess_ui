@@ -313,12 +313,14 @@ export async function handleMoveResult(data: any) {
 
   if(data.game_winner == 1 && Game.getInstance(gameId).isPlayer1()){
     alert("game is over and player1 are winner")
+    await aleoMovePiece(0, 0, 0,0)
     Game.getInstance(gameId).finish()
     return 
   }
 
   if(data.game_winner == 2 && Game.getInstance(gameId).isPlayer1()){
     alert("game is over and player2 are winner")
+    await aleoMovePiece(0, 0, 0,0)
     Game.getInstance(gameId).finish()
     return
   }

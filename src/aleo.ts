@@ -113,9 +113,6 @@ export function getInitLinePiece(): [string[], number, number] {
     }
   }
   const newLines = lines.map(line => Long.fromNumber(line).toString() + "u64");
-
-
-
   return [newLines, chessFlag.flagX , chessFlag.flagY];
 }
 
