@@ -53,8 +53,10 @@ export function updateMoveInfo(gameId: string, x: number, y: number,
   // console.log(`updateMoveInfo result:${moveInfo}`)
 }
 
-export const aleoUrl: string = "http://127.0.0.1:3030"
-export const developUrl: string = "http://192.168.2.20:4040"
+// export const aleoUrl: string = "http://127.0.0.1:3030"
+export const aleoUrl: string = "https://vm.aleo.org/api"
+// export const developUrl: string = "http://192.168.2.20:4040"
+export const developUrl: string = "https://vm.aleo.org/api"
 export let nodeConnection: AleoNetworkClient
 export let developerClient: DevelopmentClient
 let plainTexts: RecordPlaintext[] = []
